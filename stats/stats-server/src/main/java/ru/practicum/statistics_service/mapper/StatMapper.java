@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service
 public class StatMapper {
-    public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static EndpointHit makeEndpointHit(EndpointHitDto endpointHitDto) {
         return EndpointHit.builder()
