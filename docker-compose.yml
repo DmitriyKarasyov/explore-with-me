@@ -26,3 +26,10 @@ services:
       - POSTGRES_DB=explore_with_me_stats
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
+
+  ewm-service:
+    ports:
+      - "8080:8080"
+
+  ewm-db:
+    image: postgres:13.7-alpine
