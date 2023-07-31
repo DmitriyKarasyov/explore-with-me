@@ -2,6 +2,8 @@ package ru.practicum.statistics_service.service;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaContext;
@@ -50,13 +52,16 @@ public class StatService {
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
         List<Tuple> viewStatsTuple;
+        NumberPath<Long> aliasQuantity = Expressions.numberPath(Long.class, "quantity");
 
         if (unique != null) {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct())
-                    .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri).fetch();
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().as(aliasQuantity))
+                    .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
+                    .orderBy(aliasQuantity.desc()).fetch();
         } else {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count())
-                    .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri).fetch();
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count().as(aliasQuantity))
+                    .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
+                    .orderBy(aliasQuantity.desc()).fetch();
         }
 
         return StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
