@@ -15,7 +15,6 @@ import ru.practicum.statistics_service.service.StatService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,7 +51,7 @@ public class StatControllerTest {
     }
 
     @Test
-    public void saveHitTest() throws Exception{
+    public void saveHitTest() throws Exception {
         mvc.perform(post("/hit")
                         .content(mapper.writeValueAsString(endpointHitDto))
                         .characterEncoding(StandardCharsets.UTF_8)
