@@ -299,7 +299,7 @@ public class EventServiceImpl implements EventService {
         Integer freePlaces = checkEventLimit(event, requests);
         List<ParticipationRequest> requestsToConfirm;
         List<ParticipationRequest> requestsToReject;
-        if (requests.size() == freePlaces) {
+        if (requests.size() <= freePlaces) {
             requestsToConfirm = requests;
             requestsToReject = new ArrayList<>();
         } else {
