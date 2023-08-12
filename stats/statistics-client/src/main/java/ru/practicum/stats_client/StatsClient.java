@@ -1,15 +1,9 @@
 package ru.practicum.stats_client;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 
 import java.time.LocalDateTime;
@@ -17,17 +11,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-@Service
 public class StatsClient {
     private final RestTemplate rest;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Autowired
-    public StatsClient(@Value("${stats-server url}") String serverUrl, RestTemplateBuilder builder) {
-        rest = builder
-                .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
-                .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-                .build();
+    public StatsClient(RestTemplate rest) {
+        this.rest = rest;
     }
 
     public ResponseEntity<Object> postHit(EndpointHitDto endpointHitDto) {
