@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS events (
     participant_limit INTEGER DEFAULT 0,
     published_on TIMESTAMP WITHOUT TIME ZONE,
     request_moderation BOOLEAN DEFAULT TRUE,
-    state VARCHAR NOT NULL,
+    state VARCHAR,
     title VARCHAR(120) NOT NULL,
     views INTEGER,
     CONSTRAINT pk_events PRIMARY KEY (id),

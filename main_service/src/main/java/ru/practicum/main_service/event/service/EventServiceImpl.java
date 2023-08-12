@@ -11,6 +11,7 @@ import ru.practicum.main_service.common.DBRequest;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.common.PageableParser;
 import ru.practicum.main_service.event.dto.*;
+import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.mapper.*;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.sort.Sort;
@@ -20,6 +21,7 @@ import ru.practicum.main_service.event.model.state_action.UserStateAction;
 import ru.practicum.main_service.event.model.status.UpdateRequestStatus;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.model.event.QEvent;
+import ru.practicum.main_service.event.repository.LocationRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
 import ru.practicum.main_service.exception.IncorrectRequestException;
 import ru.practicum.main_service.exception.NotFoundException;
@@ -47,6 +49,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
+    private final LocationRepository locationRepository;
     private final DBRequest<Event> eventDBRequest;
     private final DBRequest<User> userDBRequest;
     private final DBRequest<Category> categoryDBRequest;
@@ -58,11 +61,13 @@ public class EventServiceImpl implements EventService {
                             UserRepository userRepository,
                             CategoryRepository categoryRepository,
                             RequestRepository requestRepository,
+                            LocationRepository locationRepository,
                             EWMStatsClient statsClient) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.requestRepository = requestRepository;
+        this.locationRepository = locationRepository;
         eventDBRequest = new DBRequest<>(eventRepository);
         userDBRequest = new DBRequest<>(userRepository);
         categoryDBRequest = new DBRequest<>(categoryRepository);
@@ -83,6 +88,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto postEvent(Integer userId, NewEventDto newEventDto) {
         userDBRequest.checkExistence(User.class, userId);
         categoryDBRequest.checkExistence(Category.class, newEventDto.getCategory());
+        locationRepository.save(newEventDto.getLocation());
         setDefaultFields(newEventDto);
         Event newEvent = eventDBRequest.tryRequest(eventRepository::save, makeEvent(newEventDto, userId));
         return EventMapper.makeEventFullDto(newEvent);
@@ -109,7 +115,7 @@ public class EventServiceImpl implements EventService {
             checkStateUser(event);
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
-        event = updateEvent(event, updateEventUserRequest);
+        updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
     }
@@ -155,7 +161,7 @@ public class EventServiceImpl implements EventService {
                                         String rangeEnd, Integer from, Integer size) {
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
-        if (users != null && users.length != 0) {
+        if (users != null && users.length != 0 && (users.length == 1 && users[0] != 0)) {
             whereClause.and(event.initiator.id.in(users));
         }
         if (stateStringsArray != null && stateStringsArray.length != 0) {
@@ -163,7 +169,7 @@ public class EventServiceImpl implements EventService {
             List<State> states = StateMapper.makeState(stateStringsList);
             whereClause.and(event.state.in(states));
         }
-        if (categories != null && categories.length != 0) {
+        if (categories != null && categories.length != 0 && (categories.length == 1 && categories[0] != 0)) {
             whereClause.and(event.category.id.in(categories));
         }
         if (rangeStart != null && !rangeStart.isBlank()) {
@@ -378,33 +384,32 @@ public class EventServiceImpl implements EventService {
     }
 
     public Event updateEvent(Event event, UpdateEventRequest updateEventUserRequest) {
-        if (!Objects.equals(updateEventUserRequest.getAnnotation(), event.getAnnotation())) {
+        if (updateEventUserRequest.getAnnotation() != null) {
             event.setAnnotation(updateEventUserRequest.getAnnotation());
         }
-        if (!Objects.equals(updateEventUserRequest.getCategory(), event.getCategory().getId())) {
+        if (updateEventUserRequest.getCategory() != null) {
             categoryDBRequest.checkExistence(Category.class, updateEventUserRequest.getCategory());
             event.setCategory(categoryRepository.getReferenceById(updateEventUserRequest.getCategory()));
         }
-        if (!Objects.equals(updateEventUserRequest.getDescription(), event.getDescription())) {
+        if (updateEventUserRequest.getDescription() != null && !updateEventUserRequest.getDescription().isBlank()) {
             event.setDescription(updateEventUserRequest.getDescription());
         }
-        if (!Objects.equals(updateEventUserRequest.getEventDate(),
-                event.getEventDate().format(EWMDateFormatter.FORMATTER))) {
+        if (updateEventUserRequest.getEventDate() != null && !updateEventUserRequest.getEventDate().isBlank()) {
             event.setEventDate(LocalDateTime.parse(updateEventUserRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-        if (updateEventUserRequest.getLocation() != event.getLocation()) {
+        if (updateEventUserRequest.getLocation() != null) {
             event.setLocation(updateEventUserRequest.getLocation());
         }
-        if (updateEventUserRequest.getPaid() != event.getPaid()) {
+        if (updateEventUserRequest.getPaid() != null) {
             event.setPaid(updateEventUserRequest.getPaid());
         }
-        if (!Objects.equals(updateEventUserRequest.getParticipantLimit(), event.getParticipantLimit())) {
+        if (updateEventUserRequest.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
         }
-        if (updateEventUserRequest.getRequestModeration() != event.getRequestModeration()) {
+        if (updateEventUserRequest.getRequestModeration() != null) {
             event.setRequestModeration(updateEventUserRequest.getRequestModeration());
         }
-        if (!Objects.equals(updateEventUserRequest.getTitle(), event.getTitle())) {
+        if (updateEventUserRequest.getTitle() != null && !updateEventUserRequest.getTitle().isBlank()) {
             event.setTitle(updateEventUserRequest.getTitle());
         }
         return event;
@@ -415,8 +420,10 @@ public class EventServiceImpl implements EventService {
         switch (stateAction) {
             case SEND_TO_REVIEW:
                 event.setState(State.PENDING);
+                break;
             case CANCEL_REVIEW:
                 event.setState(null);
+                break;
         }
     }
 
@@ -424,8 +431,10 @@ public class EventServiceImpl implements EventService {
         switch (stateAction) {
             case PUBLISH_EVENT:
                 event.setState(State.PUBLISHED);
+                break;
             case REJECT_EVENT:
                 event.setState(State.CANCELED);
+                break;
         }
     }
 

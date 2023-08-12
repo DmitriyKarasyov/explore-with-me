@@ -47,9 +47,10 @@ public class EventMapper {
                 .location(event.getLocation())
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
-                .publishedOn(event.getPublishedOn().format(EWMDateFormatter.FORMATTER))
+                .publishedOn(event.getPublishedOn() == null ? null
+                        : event.getPublishedOn().format(EWMDateFormatter.FORMATTER))
                 .requestModeration(event.getRequestModeration())
-                .state(event.getState().toString())
+                .state(event.getState() == null ? null : event.getState().toString())
                 .title(event.getTitle())
                 .views(event.getViews())
                 .build();
