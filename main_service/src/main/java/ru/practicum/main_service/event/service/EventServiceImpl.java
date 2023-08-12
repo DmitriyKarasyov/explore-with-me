@@ -139,9 +139,9 @@ public class EventServiceImpl implements EventService {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         checkInitiator(event, userId);
-        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(request.getRequestsIds());
+        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(request.getRequestIds());
         if (requestsToUpdate.isEmpty()) {
-            throw new NotFoundException("Requests with ids: " + request.getRequestsIds() + " were not found");
+            throw new NotFoundException("Requests with ids: " + request.getRequestIds() + " were not found");
         }
         checkRequestsRightEvent(event, requestsToUpdate);
         checkRequestsStatus(requestsToUpdate);
