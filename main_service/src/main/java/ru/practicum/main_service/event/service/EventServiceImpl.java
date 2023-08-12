@@ -466,8 +466,10 @@ public class EventServiceImpl implements EventService {
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
+                .state(State.PENDING)
                 .title(newEventDto.getTitle())
                 .initiator(userRepository.getReferenceById(userId))
+                .views(0)
                 .build();
     }
 }
