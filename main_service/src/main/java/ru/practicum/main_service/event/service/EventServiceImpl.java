@@ -297,8 +297,15 @@ public class EventServiceImpl implements EventService {
             return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requests), new ArrayList<>());
         }
         Integer freePlaces = checkEventLimit(event, requests);
-        List<ParticipationRequest> requestsToConfirm = requests.subList(0, freePlaces);
-        List<ParticipationRequest> requestsToReject = requests.subList(freePlaces, requests.size());
+        List<ParticipationRequest> requestsToConfirm;
+        List<ParticipationRequest> requestsToReject;
+        if (requests.size() == freePlaces) {
+            requestsToConfirm = requests;
+            requestsToReject = new ArrayList<>();
+        } else {
+            requestsToConfirm = requests.subList(0, freePlaces);
+            requestsToReject = requests.subList(freePlaces, requests.size());
+        }
         return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requestsToConfirm),
                 changeStatusToRejected(requestsToReject));
     }
