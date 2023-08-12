@@ -11,7 +11,6 @@ import ru.practicum.main_service.common.DBRequest;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.common.PageableParser;
 import ru.practicum.main_service.event.dto.*;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.mapper.*;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.sort.Sort;
