@@ -46,7 +46,7 @@ public class StatControllerTest {
         viewStatsDto = ViewStatsDto.builder()
                 .app("ewm-main-service")
                 .uri("/events/1")
-                .hits(1L)
+                .hits(1)
                 .build();
     }
 
