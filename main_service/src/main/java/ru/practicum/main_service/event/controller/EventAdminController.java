@@ -7,6 +7,7 @@ import ru.practicum.main_service.event.dto.EventFullDto;
 import ru.practicum.main_service.event.dto.UpdateEventAdminRequest;
 import ru.practicum.main_service.event.service.EventService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -30,12 +31,12 @@ public class EventAdminController {
                                         @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("get events, users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
-        return service.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        return service.getEventsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventAdmin(@PathVariable Integer eventId,
-                                        @RequestBody UpdateEventAdminRequest updateRequest) {
+                                        @RequestBody @Valid UpdateEventAdminRequest updateRequest) {
         log.info("admin update event with id={}, update request: {}", eventId, updateRequest);
         return service.patchEventAdmin(eventId, updateRequest);
     }

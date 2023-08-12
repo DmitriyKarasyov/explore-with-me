@@ -3,6 +3,7 @@ package ru.practicum.main_service.event.mapper;
 import ru.practicum.main_service.category.mapper.CategoryMapper;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.event.dto.EventFullDto;
+import ru.practicum.main_service.event.dto.Location;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.dto.EventShortDto;
 import ru.practicum.main_service.user.mapper.UserMapper;
@@ -44,12 +45,16 @@ public class EventMapper {
                 .description(event.getDescription())
                 .eventDate(event.getEventDate().format(EWMDateFormatter.FORMATTER))
                 .initiator(UserMapper.makeUserShortDto(event.getInitiator()))
-                .location(event.getLocation())
+                .location(Location.builder()
+                        .lat(event.getLat())
+                        .lon(event.getLon())
+                        .build())
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
-                .publishedOn(event.getPublishedOn().format(EWMDateFormatter.FORMATTER))
+                .publishedOn(event.getPublishedOn() == null ? null
+                        : event.getPublishedOn().format(EWMDateFormatter.FORMATTER))
                 .requestModeration(event.getRequestModeration())
-                .state(event.getState().toString())
+                .state(event.getState() == null ? null : event.getState().toString())
                 .title(event.getTitle())
                 .views(event.getViews())
                 .build();

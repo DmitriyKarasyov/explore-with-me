@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.main_service.category.model.Category;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.model.state.State;
 import ru.practicum.main_service.user.model.User;
 
@@ -40,10 +39,10 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
-    @ManyToOne
-    @JoinColumns({ @JoinColumn(name = "lat", referencedColumnName = "lat"),
-            @JoinColumn(name = "lon", referencedColumnName = "lon") })
-    private Location location;
+    @Column(name = "lat")
+    private Float lat;
+    @Column(name = "lon")
+    private Float lon;
     @Column(name = "paid", nullable = false)
     private Boolean paid;
     @Column(name = "participant_limit")

@@ -3,7 +3,6 @@ package ru.practicum.main_service.event.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.validation.Length;
 import ru.practicum.main_service.validation.NotBlank;
 import ru.practicum.main_service.validation.ValidEventDate;

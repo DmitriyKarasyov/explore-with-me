@@ -1,8 +1,12 @@
 package ru.practicum.main_service.event.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_service.category.model.Category;
@@ -30,17 +34,15 @@ import ru.practicum.main_service.participation.repository.RequestRepository;
 import ru.practicum.main_service.participation.status.Status;
 import ru.practicum.main_service.user.model.User;
 import ru.practicum.main_service.user.repository.UserRepository;
-import ru.practicum.main_service.validation.EventDateValidator;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
+import ru.practicum.statistics_service.dto.ViewStatsDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
@@ -52,6 +54,7 @@ public class EventServiceImpl implements EventService {
     private final DBRequest<Category> categoryDBRequest;
     private final DBRequest<ParticipationRequest> requestDBRequest;
     private final EWMStatsClient statsClient;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository,
@@ -105,11 +108,11 @@ public class EventServiceImpl implements EventService {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         checkInitiator(event, userId);
+        checkStateUser(event);
         if (updateEventUserRequest.getStateAction() != null) {
-            checkStateUser(event);
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
-        event = updateEvent(event, updateEventUserRequest);
+        updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
     }
@@ -134,9 +137,9 @@ public class EventServiceImpl implements EventService {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         checkInitiator(event, userId);
-        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(request.getRequestsIds());
+        List<ParticipationRequest> requestsToUpdate = requestRepository.findAllByIdIn(request.getRequestIds());
         if (requestsToUpdate.isEmpty()) {
-            throw new NotFoundException("Requests with ids: " + request.getRequestsIds() + " were not found");
+            throw new NotFoundException("Requests with ids: " + request.getRequestIds() + " were not found");
         }
         checkRequestsRightEvent(event, requestsToUpdate);
         checkRequestsStatus(requestsToUpdate);
@@ -151,11 +154,15 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public List<EventFullDto> getEvents(Integer[] users, String[] stateStringsArray, Integer[] categories, String rangeStart,
-                                        String rangeEnd, Integer from, Integer size) {
+    public List<EventFullDto> getEventsAdmin(Integer[] users, String[] stateStringsArray, Integer[] categories,
+                                             String rangeStart, String rangeEnd, Integer from, Integer size) {
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
-        if (users != null && users.length != 0) {
+
+        if ((rangeStart != null && !rangeStart.isBlank()) && (rangeEnd != null && !rangeEnd.isBlank())) {
+            checkDates(rangeStart, rangeEnd);
+        }
+        if (users != null && users.length != 0 && (users.length == 1 && users[0] != 0)) {
             whereClause.and(event.initiator.id.in(users));
         }
         if (stateStringsArray != null && stateStringsArray.length != 0) {
@@ -163,7 +170,7 @@ public class EventServiceImpl implements EventService {
             List<State> states = StateMapper.makeState(stateStringsList);
             whereClause.and(event.state.in(states));
         }
-        if (categories != null && categories.length != 0) {
+        if (categories != null && categories.length != 0 && (categories.length == 1 && categories[0] != 0)) {
             whereClause.and(event.category.id.in(categories));
         }
         if (rangeStart != null && !rangeStart.isBlank()) {
@@ -183,7 +190,6 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest) {
         eventDBRequest.checkExistence(Event.class, eventId);
-        EventDateValidator.validate(updateRequest.getEventDate());
         Event event = eventRepository.getReferenceById(eventId);
         if (updateRequest.getStateAction() != null && !updateRequest.getStateAction().isBlank()) {
             AdminStateAction stateAction = StateActionMapper.makeAdminStateAction(updateRequest.getStateAction());
@@ -199,10 +205,15 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public List<EventShortDto> getEventsPublic(String text, Integer[] categories, Boolean paid,
                                                String rangeStart, String rangeEnd, Boolean onlyAvailable,
-                                               String sortString, Integer from, Integer size) {
+                                               String sortString, Integer from, Integer size,
+                                               HttpServletRequest request) {
+        statsClient.postHit(makeEndpointHitDto(request));
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
         whereClause.and(event.state.eq(State.PUBLISHED));
+        if ((rangeStart != null && !rangeStart.isBlank()) && (rangeEnd != null && !rangeEnd.isBlank())) {
+            checkDates(rangeStart, rangeEnd);
+        }
         if ((rangeStart == null || rangeStart.isBlank()) && (rangeEnd == null || rangeEnd.isBlank())) {
             whereClause.and(event.eventDate.after(LocalDateTime.now()));
         }
@@ -244,9 +255,35 @@ public class EventServiceImpl implements EventService {
         if (event.getState() != State.PUBLISHED) {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
-        event.setViews(event.getViews() + 1);
         statsClient.postHit(makeEndpointHitDto(request));
-        return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
+        ResponseEntity<ViewStatsDto[]> responseEntity = statsClient.getStats(
+                LocalDateTime.now().minusMonths(6), LocalDateTime.now().plusMonths(6),
+                List.of("/events/" + id), true);
+        try {
+            log.info("got statistics: {}", mapper.writeValueAsString(responseEntity.getBody()));
+            if (responseEntity.getBody() != null) {
+
+                List<ViewStatsDto> viewStats = List.of(responseEntity.getBody());
+                if (!viewStats.isEmpty()) {
+                    event.setViews(viewStats.get(0).getHits());
+                }
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error", e);
+            throw new IncorrectRequestException(e.getMessage());
+        }
+
+        EventFullDto eventFullDto =
+                EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
+        log.info("returning event full dto: {}", eventFullDto);
+        return eventFullDto;
+    }
+
+    public void checkDates(String startString, String endString) {
+        if (LocalDateTime.parse(startString, EWMDateFormatter.FORMATTER).isAfter(
+                LocalDateTime.parse(endString, EWMDateFormatter.FORMATTER))) {
+            throw new IncorrectRequestException("Range start cannot be after range end.");
+        }
     }
 
     public List<EventShortDto> sortList(List<Event> events, String sortString) {
@@ -264,22 +301,32 @@ public class EventServiceImpl implements EventService {
     }
 
     public EndpointHitDto makeEndpointHitDto(HttpServletRequest request) {
-        return EndpointHitDto.builder()
+        EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app("ewm-main-service")
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
                 .timestamp(LocalDateTime.now().format(EWMDateFormatter.FORMATTER))
                 .build();
+        log.info("sending info about hit to stat service: {}", endpointHitDto);
+        return endpointHitDto;
     }
 
     public EventRequestStatusUpdateResult confirmRequests(List<ParticipationRequest> requests, Event event) {
-        if (checkModeration(event)) {
+        if (!checkIfLimitExists(event)) {
             changeStatusToConfirmed(event, requests);
+            event.setConfirmedRequests(event.getConfirmedRequests() + requests.size());
             return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requests), new ArrayList<>());
         }
         Integer freePlaces = checkEventLimit(event, requests);
-        List<ParticipationRequest> requestsToConfirm = requests.subList(0, freePlaces);
-        List<ParticipationRequest> requestsToReject = requests.subList(freePlaces, requests.size());
+        List<ParticipationRequest> requestsToConfirm;
+        List<ParticipationRequest> requestsToReject;
+        if (requests.size() <= freePlaces) {
+            requestsToConfirm = requests;
+            requestsToReject = new ArrayList<>();
+        } else {
+            requestsToConfirm = requests.subList(0, freePlaces);
+            requestsToReject = requests.subList(freePlaces, requests.size());
+        }
         return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requestsToConfirm),
                 changeStatusToRejected(requestsToReject));
     }
@@ -338,8 +385,8 @@ public class EventServiceImpl implements EventService {
         return event.getParticipantLimit() - event.getConfirmedRequests();
     }
 
-    public Boolean checkModeration(Event event) {
-        return event.getParticipantLimit() == 0 || !event.getRequestModeration();
+    public Boolean checkIfLimitExists(Event event) {
+        return event.getParticipantLimit() != 0;
     }
 
     public void checkRequestsRightEvent(Event event, List<ParticipationRequest> requests) {
@@ -355,8 +402,8 @@ public class EventServiceImpl implements EventService {
 
     public void checkStateUser(Event event) {
         State state = event.getState();
-        if (!(state == null || state == State.PENDING || state == State.CANCELED)) {
-            throw new IncorrectRequestException("Only pending or canceled events can be changed");
+        if (state.equals(State.PUBLISHED)) {
+            throw new ConditionViolationException("Only pending or canceled events can be changed");
         }
     }
 
@@ -377,35 +424,35 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public Event updateEvent(Event event, UpdateEventRequest updateEventUserRequest) {
-        if (!Objects.equals(updateEventUserRequest.getAnnotation(), event.getAnnotation())) {
-            event.setAnnotation(updateEventUserRequest.getAnnotation());
+    public Event updateEvent(Event event, UpdateEventRequest updateEventRequest) {
+        if (updateEventRequest.getAnnotation() != null) {
+            event.setAnnotation(updateEventRequest.getAnnotation());
         }
-        if (!Objects.equals(updateEventUserRequest.getCategory(), event.getCategory().getId())) {
-            categoryDBRequest.checkExistence(Category.class, updateEventUserRequest.getCategory());
-            event.setCategory(categoryRepository.getReferenceById(updateEventUserRequest.getCategory()));
+        if (updateEventRequest.getCategory() != null) {
+            categoryDBRequest.checkExistence(Category.class, updateEventRequest.getCategory());
+            event.setCategory(categoryRepository.getReferenceById(updateEventRequest.getCategory()));
         }
-        if (!Objects.equals(updateEventUserRequest.getDescription(), event.getDescription())) {
-            event.setDescription(updateEventUserRequest.getDescription());
+        if (updateEventRequest.getDescription() != null && !updateEventRequest.getDescription().isBlank()) {
+            event.setDescription(updateEventRequest.getDescription());
         }
-        if (!Objects.equals(updateEventUserRequest.getEventDate(),
-                event.getEventDate().format(EWMDateFormatter.FORMATTER))) {
-            event.setEventDate(LocalDateTime.parse(updateEventUserRequest.getEventDate(), EWMDateFormatter.FORMATTER));
+        if (updateEventRequest.getEventDate() != null && !updateEventRequest.getEventDate().isBlank()) {
+            event.setEventDate(LocalDateTime.parse(updateEventRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-        if (updateEventUserRequest.getLocation() != event.getLocation()) {
-            event.setLocation(updateEventUserRequest.getLocation());
+        if (updateEventRequest.getLocation() != null) {
+            event.setLat(updateEventRequest.getLocation().getLat());
+            event.setLon(updateEventRequest.getLocation().getLon());
         }
-        if (updateEventUserRequest.getPaid() != event.getPaid()) {
-            event.setPaid(updateEventUserRequest.getPaid());
+        if (updateEventRequest.getPaid() != null) {
+            event.setPaid(updateEventRequest.getPaid());
         }
-        if (!Objects.equals(updateEventUserRequest.getParticipantLimit(), event.getParticipantLimit())) {
-            event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
+        if (updateEventRequest.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateEventRequest.getParticipantLimit());
         }
-        if (updateEventUserRequest.getRequestModeration() != event.getRequestModeration()) {
-            event.setRequestModeration(updateEventUserRequest.getRequestModeration());
+        if (updateEventRequest.getRequestModeration() != null) {
+            event.setRequestModeration(updateEventRequest.getRequestModeration());
         }
-        if (!Objects.equals(updateEventUserRequest.getTitle(), event.getTitle())) {
-            event.setTitle(updateEventUserRequest.getTitle());
+        if (updateEventRequest.getTitle() != null && !updateEventRequest.getTitle().isBlank()) {
+            event.setTitle(updateEventRequest.getTitle());
         }
         return event;
     }
@@ -415,17 +462,25 @@ public class EventServiceImpl implements EventService {
         switch (stateAction) {
             case SEND_TO_REVIEW:
                 event.setState(State.PENDING);
+                break;
             case CANCEL_REVIEW:
-                event.setState(null);
+                event.setState(State.CANCELED);
+                break;
         }
     }
 
     public void setStateAdmin(Event event, AdminStateAction stateAction) {
         switch (stateAction) {
             case PUBLISH_EVENT:
+                if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1L))) {
+                    throw new IncorrectRequestException("Cannot publish event in les then hour before event starts.");
+                }
                 event.setState(State.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+                break;
             case REJECT_EVENT:
                 event.setState(State.CANCELED);
+                break;
         }
     }
 
@@ -454,12 +509,16 @@ public class EventServiceImpl implements EventService {
                 .createdOn(LocalDateTime.now())
                 .description(newEventDto.getDescription())
                 .eventDate(LocalDateTime.parse(newEventDto.getEventDate(), EWMDateFormatter.FORMATTER))
-                .location(newEventDto.getLocation())
+                .lat(newEventDto.getLocation().getLat())
+                .lon(newEventDto.getLocation().getLon())
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
+                .state(State.PENDING)
                 .title(newEventDto.getTitle())
                 .initiator(userRepository.getReferenceById(userId))
+                .views(0)
+                .confirmedRequests(0)
                 .build();
     }
 }

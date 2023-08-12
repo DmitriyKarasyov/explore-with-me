@@ -1,5 +1,6 @@
 package ru.practicum.main_service.participation.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,8 @@ import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.state.State;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
+import ru.practicum.main_service.exception.EWMConstraintViolationException;
+import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
 import ru.practicum.main_service.participation.mapper.ParticipationRequestMapper;
 import ru.practicum.main_service.participation.model.ParticipationRequest;
@@ -20,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
     private final RequestRepository requestRepository;
@@ -53,7 +57,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         userDBRequest.checkExistence(User.class, userId);
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
+        log.info("participation limit={}, confirmed requests={}", event.getParticipantLimit(),
+                event.getConfirmedRequests());
         checkIfRequesterIsInitiator(userId, event);
+        checkIfRequestIsDouble(eventId, userId);
         checkEventState(event);
         checkEventLimit(event);
         ParticipationRequest request = ParticipationRequest.builder()
@@ -62,14 +69,39 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .requester(userRepository.getReferenceById(userId))
                 .build();
 
-        if (event.getRequestModeration()) {
+        if (event.getRequestModeration() && event.getParticipantLimit() != 0) {
             request.setStatus(Status.PENDING);
         } else {
             request.setStatus(Status.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         }
-
+        eventDBRequest.tryRequest(eventRepository::save, event);
         return ParticipationRequestMapper.makeParticipationRequestDto(
                 requestDBRequest.tryRequest(requestRepository::save, request));
+    }
+
+    @Override
+    public ParticipationRequestDto cancelRequest(Integer userId, Integer requestId) {
+        userDBRequest.checkExistence(User.class, userId);
+        requestDBRequest.checkExistence(ParticipationRequest.class, requestId);
+        ParticipationRequest request = requestRepository.getReferenceById(requestId);
+        checkRequester(userId, request);
+        request.setStatus(Status.CANCELED);
+        return ParticipationRequestMapper.makeParticipationRequestDto(
+                requestDBRequest.tryRequest(requestRepository::save, request));
+    }
+
+    public void checkRequester(Integer userId, ParticipationRequest request) {
+        if (!Objects.equals(request.getRequester().getId(), userId)) {
+            throw new NotFoundException("user with id=" + userId + " did not make request");
+        }
+    }
+
+    public void checkIfRequestIsDouble(Integer eventId, Integer requesterId) {
+        if (requestRepository.existsByEvent_IdAndRequester_Id(eventId, requesterId)) {
+            throw new EWMConstraintViolationException("Can not post participation request: request from this user " +
+                    "already exists");
+        }
     }
 
     public void checkIfRequesterIsInitiator(Integer userId, Event event) {
@@ -85,7 +117,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     public void checkEventLimit(Event event) {
-        if (event.getParticipantLimit() != 0 && !(event.getConfirmedRequests() < event.getParticipantLimit())) {
+        if (event.getParticipantLimit() != 0 && (Objects.equals(event.getConfirmedRequests(),
+                event.getParticipantLimit()))) {
             throw new ConditionViolationException("Event participation limit is reached");
         }
     }

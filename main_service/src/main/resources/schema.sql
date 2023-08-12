@@ -16,12 +16,6 @@ CREATE TABLE IF NOT EXISTS categories (
     CONSTRAINT uq_name UNIQUE (category_name)
 );
 
-CREATE TABLE IF NOT EXISTS locations (
-    lat FLOAT NOT NULL,
-    lon FLOAT NOT NULL,
-    CONSTRAINT pk_locations PRIMARY KEY (lat, lon)
-);
-
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     annotation VARCHAR(2000) NOT NULL,
@@ -37,11 +31,10 @@ CREATE TABLE IF NOT EXISTS events (
     participant_limit INTEGER DEFAULT 0,
     published_on TIMESTAMP WITHOUT TIME ZONE,
     request_moderation BOOLEAN DEFAULT TRUE,
-    state VARCHAR NOT NULL,
+    state VARCHAR,
     title VARCHAR(120) NOT NULL,
     views INTEGER,
-    CONSTRAINT pk_events PRIMARY KEY (id),
-    FOREIGN KEY (lat, lon) REFERENCES locations (lat, lon)
+    CONSTRAINT pk_events PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS participation_requests (
@@ -55,7 +48,7 @@ CREATE TABLE IF NOT EXISTS participation_requests (
 
 CREATE TABLE IF NOT EXISTS compilations (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    pined BOOLEAN NOT NULL,
+    pinned BOOLEAN,
     title VARCHAR(50),
     CONSTRAINT compilations_pk PRIMARY KEY (id),
     CONSTRAINT uq_compilation_title UNIQUE (title)

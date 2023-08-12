@@ -36,9 +36,14 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional
-    public List<CompilationDto> getCompilations(Boolean pined, Integer from, Integer size) {
+    public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         Pageable pageable = PageableParser.makePageable(from, size);
-        List<Compilation> compilations = compilationRepository.findByPined(pined, pageable);
+        List<Compilation> compilations;
+        if (pinned != null) {
+            compilations = compilationRepository.findBypinned(pinned, pageable);
+        } else {
+            compilations = compilationRepository.findAll(pageable).toList();
+        }
         return CompilationMapper.makeCompilationDto(compilations);
     }
 
@@ -74,8 +79,8 @@ public class CompilationServiceImpl implements CompilationService {
             Set<Event> newEvents = new HashSet<>(eventRepository.findAllByIdIn(updateCompilationRequest.getEvents()));
             compilation.setEvents(newEvents);
         }
-        if (updateCompilationRequest.getPined() != null) {
-            compilation.setPined(updateCompilationRequest.getPined());
+        if (updateCompilationRequest.getPinned() != null) {
+            compilation.setPinned(updateCompilationRequest.getPinned());
         }
         if (updateCompilationRequest.getTitle() != null && !updateCompilationRequest.getTitle().isBlank()) {
             compilation.setTitle(updateCompilationRequest.getTitle());
@@ -85,12 +90,15 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     public Compilation makeCompilation(NewCompilationDto newCompilationDto) {
-        if (!eventRepository.existsAllByIdIn(newCompilationDto.getEvents())) {
-            throw new NotFoundException("Event was not found.");
+        if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
+            if (!eventRepository.existsAllByIdIn(newCompilationDto.getEvents())) {
+                throw new NotFoundException("Event was not found.");
+            }
         }
         return Compilation.builder()
-                .events(new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
-                .pined(newCompilationDto.getPined())
+                .events(newCompilationDto.getEvents() == null ? null
+                        : new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
+                .pinned(newCompilationDto.getPinned() != null && newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .build();
     }

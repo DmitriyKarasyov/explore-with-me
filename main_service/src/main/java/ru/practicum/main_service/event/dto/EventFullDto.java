@@ -3,7 +3,6 @@ package ru.practicum.main_service.event.dto;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.main_service.category.dto.CategoryDto;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.user.dto.UserShortDto;
 
 @Data

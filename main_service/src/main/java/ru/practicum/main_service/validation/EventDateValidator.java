@@ -1,7 +1,7 @@
 package ru.practicum.main_service.validation;
 
 import ru.practicum.main_service.common.EWMDateFormatter;
-import ru.practicum.main_service.exception.ConditionViolationException;
+import ru.practicum.main_service.exception.IncorrectRequestException;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -26,9 +26,9 @@ public class EventDateValidator implements ConstraintValidator<ValidEventDate, S
         }
         LocalDateTime eventDate = LocalDateTime.parse(stringEventDate, EWMDateFormatter.FORMATTER);
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2L))) {
-            throw new ConditionViolationException(
+            throw new IncorrectRequestException(
                     String.format("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: %s",
-                            eventDate.format(DateTimeFormatter.ofPattern("yyyy-MM-ddT1HH:mm:ss"))));
+                            eventDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         }
         return true;
     }

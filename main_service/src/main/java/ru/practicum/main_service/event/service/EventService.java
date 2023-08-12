@@ -22,13 +22,16 @@ public interface EventService {
                                                   Integer eventId,
                                                   EventRequestStatusUpdateRequest request);
 
-    List<EventFullDto> getEvents(Integer[] users, String[] states, Integer[] categories, String rangeStart,
-                                 String rangeEnd, Integer from, Integer size);
+    List<EventFullDto> getEventsAdmin(Integer[] users, String[] states, Integer[] categories, String rangeStart,
+                                      String rangeEnd, Integer from, Integer size);
 
     EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest);
 
     List<EventShortDto> getEventsPublic(String text, Integer[] categories, Boolean paid, String rangeStart,
-                                        String rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size);
+                                        String rangeEnd, Boolean onlyAvailable, String sort, Integer from,
+                                        Integer size, HttpServletRequest request);
 
     EventFullDto getEventByIdPublic(Integer id, HttpServletRequest request);
+
+//    void saveLocation(Location location);
 }

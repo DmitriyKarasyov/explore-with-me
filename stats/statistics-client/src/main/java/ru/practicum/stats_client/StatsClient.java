@@ -1,16 +1,21 @@
 package ru.practicum.stats_client;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
+import ru.practicum.statistics_service.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class StatsClient {
     private final RestTemplate rest;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -19,18 +24,19 @@ public class StatsClient {
         this.rest = rest;
     }
 
-    public ResponseEntity<Object> postHit(EndpointHitDto endpointHitDto) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
+    public void postHit(EndpointHitDto endpointHitDto) {
+        makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
     }
 
-    public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
-                                           @Nullable Boolean unique) {
-        String startString = start.format(formatter);
-        String endString = end.format(formatter);
-        if (uris != null && !uris.isEmpty() && unique != null) {
-            return getStatsInUrisAndUnique(startString, endString, uris, unique);
-        } else if (uris != null && !uris.isEmpty()) {
-            return getStatsInUris(startString, endString, uris);
+    public ResponseEntity<ViewStatsDto[]> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
+                                       @Nullable Boolean unique) {
+        String startString = start == null ? null : start.format(formatter);
+        String endString = end == null ? null : end.format(formatter);
+        String urisPath = StringUtils.join(uris, ",");
+        if (urisPath != null && !urisPath.isEmpty() && unique != null) {
+            return getStatsInUrisAndUnique(startString, endString, urisPath, unique);
+        } else if (urisPath != null && !urisPath.isEmpty()) {
+            return getStatsInUris(startString, endString, urisPath);
         } else if (unique != null) {
             return getStatsUnique(startString, endString, unique);
         } else {
@@ -38,61 +44,73 @@ public class StatsClient {
         }
     }
 
-    private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
-                                                           Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+    private ResponseEntity<ViewStatsDto[]> getStatsInUrisAndUnique(String start, String end, String uris,
+                                                       Boolean unique) {
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris,
                 "unique", unique
-        );
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}&unique={unique}",
-                parameters, null);
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
+        return getStatsRequest(makePath(parameters));
     }
 
-    private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+    private ResponseEntity<ViewStatsDto[]> getStatsInUris(String start, String end, String uris) {
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris
-        );
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
-                parameters, null);
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
+        return getStatsRequest(makePath(parameters));
     }
 
-    private ResponseEntity<Object> getStatsUnique(String start, String end, Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+    private ResponseEntity<ViewStatsDto[]> getStatsUnique(String start, String end, Boolean unique) {
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "unique", unique
-        );
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
-                parameters, null);
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
+        return getStatsRequest(makePath(parameters));
     }
 
-    private ResponseEntity<Object> getStatsAllUrisNotUnique(String start, String end) {
+    private ResponseEntity<ViewStatsDto[]> getStatsAllUrisNotUnique(String start, String end) {
         Map<String, Object> parameters = Map.of(
                 "start", start,
                 "end", end
         );
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}",
-                parameters, null);
+        return getStatsRequest(makePath(parameters));
+    }
+
+    private ResponseEntity<ViewStatsDto[]> getStatsRequest(String path) {
+        log.info("get for entity, path={}", path);
+        return rest.getForEntity(path, ViewStatsDto[].class);
     }
 
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders());
-
-        ResponseEntity<Object> shareitServerResponse;
+        ResponseEntity<Object> ewmServerResponse;
         try {
             if (parameters != null) {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
+                ewmServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
+                ewmServerResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
-        return prepareGatewayResponse(shareitServerResponse);
+        return prepareGatewayResponse(ewmServerResponse);
     }
 
     private HttpHeaders defaultHeaders() {
@@ -114,5 +132,14 @@ public class StatsClient {
         }
 
         return responseBuilder.build();
+    }
+
+    public String makePath(Map<String, Object> parameters) {
+        StringBuilder pathBuilder = new StringBuilder("stats/?");
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            pathBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        String path = pathBuilder.toString();
+        return StringUtils.chop(path);
     }
 }

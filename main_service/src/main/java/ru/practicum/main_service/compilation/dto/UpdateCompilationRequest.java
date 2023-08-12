@@ -8,7 +8,7 @@ import java.util.Set;
 @Data
 public class UpdateCompilationRequest {
     private Set<Integer> events;
-    private Boolean pined;
+    private Boolean pinned;
     @Length(fieldName = "title", min = 1, max = 50)
     private String title;
 }

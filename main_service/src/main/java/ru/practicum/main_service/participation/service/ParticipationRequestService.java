@@ -9,4 +9,6 @@ public interface ParticipationRequestService {
     List<ParticipationRequestDto> getUserRequests(Integer userId);
 
     ParticipationRequestDto postRequest(Integer userId, Integer eventId);
+
+    ParticipationRequestDto cancelRequest(Integer userId, Integer requestId);
 }
