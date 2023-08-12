@@ -30,7 +30,7 @@ public class EventAdminController {
                                         @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("get events, users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
-        return service.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        return service.getEventsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/{eventId}")

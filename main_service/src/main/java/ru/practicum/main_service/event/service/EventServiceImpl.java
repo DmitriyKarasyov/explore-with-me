@@ -156,10 +156,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public List<EventFullDto> getEvents(Integer[] users, String[] stateStringsArray, Integer[] categories, String rangeStart,
-                                        String rangeEnd, Integer from, Integer size) {
+    public List<EventFullDto> getEventsAdmin(Integer[] users, String[] stateStringsArray, Integer[] categories,
+                                             String rangeStart, String rangeEnd, Integer from, Integer size) {
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
+
+        if ((rangeStart != null && !rangeStart.isBlank()) && (rangeEnd != null && !rangeEnd.isBlank())) {
+            checkDates(rangeStart, rangeEnd);
+        }
         if (users != null && users.length != 0 && (users.length == 1 && users[0] != 0)) {
             whereClause.and(event.initiator.id.in(users));
         }
@@ -208,6 +212,9 @@ public class EventServiceImpl implements EventService {
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
         whereClause.and(event.state.eq(State.PUBLISHED));
+        if ((rangeStart != null && !rangeStart.isBlank()) && (rangeEnd != null && !rangeEnd.isBlank())) {
+            checkDates(rangeStart, rangeEnd);
+        }
         if ((rangeStart == null || rangeStart.isBlank()) && (rangeEnd == null || rangeEnd.isBlank())) {
             whereClause.and(event.eventDate.after(LocalDateTime.now()));
         }
@@ -252,6 +259,13 @@ public class EventServiceImpl implements EventService {
         event.setViews(event.getViews() + 1);
         statsClient.postHit(makeEndpointHitDto(request));
         return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
+    }
+
+    public void checkDates(String startString, String endString) {
+        if (LocalDateTime.parse(startString, EWMDateFormatter.FORMATTER).isAfter(
+                LocalDateTime.parse(endString, EWMDateFormatter.FORMATTER))) {
+            throw new IncorrectRequestException("Range start cannot be after range end.");
+        }
     }
 
     public List<EventShortDto> sortList(List<Event> events, String sortString) {
@@ -470,6 +484,7 @@ public class EventServiceImpl implements EventService {
                 .title(newEventDto.getTitle())
                 .initiator(userRepository.getReferenceById(userId))
                 .views(0)
+                .confirmedRequests(0)
                 .build();
     }
 }

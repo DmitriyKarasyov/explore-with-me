@@ -22,8 +22,8 @@ public interface EventService {
                                                   Integer eventId,
                                                   EventRequestStatusUpdateRequest request);
 
-    List<EventFullDto> getEvents(Integer[] users, String[] states, Integer[] categories, String rangeStart,
-                                 String rangeEnd, Integer from, Integer size);
+    List<EventFullDto> getEventsAdmin(Integer[] users, String[] states, Integer[] categories, String rangeStart,
+                                      String rangeEnd, Integer from, Integer size);
 
     EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest);
 
