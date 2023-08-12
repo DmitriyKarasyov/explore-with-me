@@ -8,6 +8,7 @@ import ru.practicum.statistics_service.dto.EndpointHitDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,32 +41,44 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
                                                            Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris,
                 "unique", unique
-        );
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}&unique={unique}",
                 parameters, null);
     }
 
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris
-        );
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
                 parameters, null);
     }
 
     private ResponseEntity<Object> getStatsUnique(String start, String end, Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+        HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "unique", unique
-        );
+        ));
+        if (start != null) {
+            parameters.put("start", start);
+        }
+        if (end != null) {
+            parameters.put("end", end);
+        }
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
                 parameters, null);
     }
