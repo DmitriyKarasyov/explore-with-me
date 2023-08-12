@@ -27,14 +27,14 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
 
-  main-service:
+  ewm-service:
     build: main_service
     image: main_service_image
     container_name: main_service
     ports:
       - "8080:8080"
     depends_on:
-      - main-db
+      - ewm-db
       - stats-server
     environment:
       - DB_NAME=explore_with_me_main
@@ -43,7 +43,7 @@ services:
       - DB_HOST=main_service_db
       - DB_PORT=5433
 
-  main-db:
+  ewm-db:
     image: postgres:13.7-alpine
     container_name: main_service_db
     ports:
