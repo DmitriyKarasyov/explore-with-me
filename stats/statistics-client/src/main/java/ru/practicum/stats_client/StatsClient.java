@@ -19,14 +19,14 @@ public class StatsClient {
         this.rest = rest;
     }
 
-    public ResponseEntity<Object> postHit(EndpointHitDto endpointHitDto) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
+    public void postHit(EndpointHitDto endpointHitDto) {
+        makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
-                                           @Nullable Boolean unique) {
-        String startString = start.format(formatter);
-        String endString = end.format(formatter);
+                                 @Nullable Boolean unique) {
+        String startString = start == null ? null : start.format(formatter);
+        String endString = end == null ? null : end.format(formatter);
         if (uris != null && !uris.isEmpty() && unique != null) {
             return getStatsInUrisAndUnique(startString, endString, uris, unique);
         } else if (uris != null && !uris.isEmpty()) {

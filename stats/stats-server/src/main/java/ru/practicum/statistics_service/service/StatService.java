@@ -40,26 +40,31 @@ public class StatService {
 
     @Transactional
     public List<ViewStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
-        LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
-        whereClause.and(endpointHit.timestamp.after(startDate)).and(endpointHit.timestamp.before(endDate));
 
+        if (start != null && !start.isBlank()) {
+            LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.after(startDate));
+        }
+        if (end != null && !end.isBlank()) {
+            LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.before(endDate));
+        }
         if (uris != null && !uris.isEmpty()) {
             whereClause.and(endpointHit.uri.in(uris));
         }
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
         List<Tuple> viewStatsTuple;
-        NumberPath<Long> aliasQuantity = Expressions.numberPath(Long.class, "quantity");
+        NumberPath<Integer> aliasQuantity = Expressions.numberPath(Integer.class, "quantity");
 
         if (unique != null) {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().as(aliasQuantity))
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().intValue().as(aliasQuantity))
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         } else {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count().as(aliasQuantity))
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count().intValue().as(aliasQuantity))
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         }
@@ -73,7 +78,7 @@ public class StatService {
             viewStatsList.add(ViewStats.builder()
                     .app(tuple.get(0, String.class))
                     .uri(tuple.get(1, String.class))
-                    .hits(tuple.get(2, Long.class))
+                    .hits(tuple.get(2, Integer.class))
                     .build());
         }
         return viewStatsList;

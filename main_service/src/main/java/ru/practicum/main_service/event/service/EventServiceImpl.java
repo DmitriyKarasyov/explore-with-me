@@ -1,8 +1,10 @@
 package ru.practicum.main_service.event.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_service.category.model.Category;
@@ -33,13 +35,11 @@ import ru.practicum.main_service.user.model.User;
 import ru.practicum.main_service.user.repository.UserRepository;
 import ru.practicum.main_service.validation.EventDateValidator;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
+import ru.practicum.statistics_service.dto.ViewStatsDto;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,6 +54,7 @@ public class EventServiceImpl implements EventService {
     private final DBRequest<Category> categoryDBRequest;
     private final DBRequest<ParticipationRequest> requestDBRequest;
     private final EWMStatsClient statsClient;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository,
@@ -256,8 +257,13 @@ public class EventServiceImpl implements EventService {
         if (event.getState() != State.PUBLISHED) {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
-        event.setViews(event.getViews() + 1);
         statsClient.postHit(makeEndpointHitDto(request));
+        ResponseEntity<Object> responseEntity = statsClient.getStats(
+                null, null, List.of("/events/" + id), true);
+        Object[] objects = (Object[]) responseEntity.getBody();
+        List<ViewStatsDto> viewStats = Arrays.stream(objects)
+                .map(object -> mapper.convertValue(object, ViewStatsDto.class)).collect(Collectors.toList());
+        event.setViews(viewStats.get(0).getHits());
         return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
     }
 
