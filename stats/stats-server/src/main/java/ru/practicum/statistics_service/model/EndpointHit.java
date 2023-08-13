@@ -18,12 +18,12 @@ public class EndpointHit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "app", nullable = false)
+    @Column(name = "app")
     private String app;
-    @Column(name = "uri", nullable = false)
+    @Column(name = "uri")
     private String uri;
-    @Column(name = "ip", nullable = false)
+    @Column(name = "ip")
     private String ip;
-    @Column(name = "creation_timestamp", nullable = false)
+    @Column(name = "creation_timestamp")
     private LocalDateTime timestamp;
 }
