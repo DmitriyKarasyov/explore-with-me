@@ -6,6 +6,7 @@ import ru.practicum.statistics_service.dto.ViewStatsDto;
 import ru.practicum.statistics_service.model.EndpointHit;
 import ru.practicum.statistics_service.model.ViewStats;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class StatMapper {
                 .app(endpointHitDto.getApp())
                 .uri(endpointHitDto.getUri())
                 .ip(endpointHitDto.getIp())
+                .timestamp(LocalDateTime.parse(endpointHitDto.getTimestamp(), formatter))
                 .build();
     }
 
