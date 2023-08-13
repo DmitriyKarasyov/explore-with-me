@@ -1,6 +1,7 @@
 package ru.practicum.stats_client;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -45,10 +46,11 @@ public class StatsClient {
     private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
                                                            Boolean unique) {
         log.info("in the next method, start={}, end={}, uris={}, unique={}", start, end, uris, unique);
+        String urisPath = StringUtils.join(uris, ",");
         Map<String, Object> parameters = Map.of(
                 "start", start,
                 "end", end,
-                "uris", uris,
+                "uris", urisPath,
                 "unique", unique
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}&unique={unique}",
@@ -56,10 +58,11 @@ public class StatsClient {
     }
 
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
+        String urisPath = StringUtils.join(uris, ",");
         Map<String, Object> parameters = Map.of(
                 "start", start,
                 "end", end,
-                "uris", uris
+                "uris", urisPath
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
                 parameters, null);
