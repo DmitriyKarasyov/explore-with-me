@@ -8,8 +8,8 @@ import ru.practicum.statistics_service.service.StatService;
 
 import java.util.List;
 
-@RestController
 @Slf4j
+@RestController
 public class StatController {
     private final StatService statService;
 
