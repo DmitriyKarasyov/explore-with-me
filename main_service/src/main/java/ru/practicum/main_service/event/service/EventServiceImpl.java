@@ -301,12 +301,14 @@ public class EventServiceImpl implements EventService {
     }
 
     public EndpointHitDto makeEndpointHitDto(HttpServletRequest request) {
-        return EndpointHitDto.builder()
+        EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app("ewm-main-service")
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
                 .timestamp(LocalDateTime.now().format(EWMDateFormatter.FORMATTER))
                 .build();
+        log.info("sending info about hit to stat service: {}", endpointHitDto);
+        return endpointHitDto;
     }
 
     public EventRequestStatusUpdateResult confirmRequests(List<ParticipationRequest> requests, Event event) {
