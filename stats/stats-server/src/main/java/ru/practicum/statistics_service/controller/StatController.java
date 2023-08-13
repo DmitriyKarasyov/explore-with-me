@@ -2,6 +2,7 @@ package ru.practicum.statistics_service.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.service.StatService;
@@ -19,6 +20,7 @@ public class StatController {
     }
 
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public void saveHit(@RequestBody EndpointHitDto endpointHitDto) {
         log.info("Save hit = {}", endpointHitDto);
         statService.saveHit(endpointHitDto);
