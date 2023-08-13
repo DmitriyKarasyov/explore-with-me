@@ -71,7 +71,7 @@ public class StatService {
         List<Tuple> viewStatsTuple;
         NumberPath<Integer> aliasQuantity = Expressions.numberPath(Integer.class, "quantity");
 
-        if (unique != null) {
+        if (unique != null && unique) {
             viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().intValue().as(aliasQuantity))
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
