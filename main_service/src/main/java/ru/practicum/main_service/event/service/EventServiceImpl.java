@@ -15,6 +15,7 @@ import ru.practicum.main_service.common.DBRequest;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.common.PageableParser;
 import ru.practicum.main_service.event.dto.*;
+import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.mapper.*;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.sort.Sort;
@@ -26,6 +27,7 @@ import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.model.event.QEvent;
 import ru.practicum.main_service.event.repository.LocationRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
+import ru.practicum.main_service.exception.EWMConstraintViolationException;
 import ru.practicum.main_service.exception.IncorrectRequestException;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
@@ -119,7 +121,7 @@ public class EventServiceImpl implements EventService {
         }
         if (updateEventUserRequest.getLocation() != null
                 && updateEventUserRequest.getLocation() != event.getLocation()) {
-            locationRepository.save(updateEventUserRequest.getLocation());
+            saveLocation(updateEventUserRequest.getLocation());
         }
         updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
@@ -207,7 +209,7 @@ public class EventServiceImpl implements EventService {
         }
         if (updateRequest.getLocation() != null
                 && updateRequest.getLocation() != event.getLocation()) {
-            locationRepository.save(updateRequest.getLocation());
+            saveLocation(updateRequest.getLocation());
         }
         event = updateEvent(event, updateRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
@@ -529,5 +531,14 @@ public class EventServiceImpl implements EventService {
                 .views(0)
                 .confirmedRequests(0)
                 .build();
+    }
+
+    @Transactional
+    public void saveLocation(Location location) {
+        try {
+            locationRepository.save(location);
+        } catch (Exception e) {
+            throw new EWMConstraintViolationException(e.getMessage());
+        }
     }
 }

@@ -38,7 +38,12 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         Pageable pageable = PageableParser.makePageable(from, size);
-        List<Compilation> compilations = compilationRepository.findBypinned(pinned, pageable);
+        List<Compilation> compilations;
+        if (pinned != null) {
+            compilations = compilationRepository.findBypinned(pinned, pageable);
+        } else {
+            compilations = compilationRepository.findAll(pageable).toList();
+        }
         return CompilationMapper.makeCompilationDto(compilations);
     }
 
