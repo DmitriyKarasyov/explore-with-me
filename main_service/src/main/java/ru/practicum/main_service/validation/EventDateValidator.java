@@ -28,7 +28,7 @@ public class EventDateValidator implements ConstraintValidator<ValidEventDate, S
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2L))) {
             throw new ConditionViolationException(
                     String.format("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: %s",
-                            eventDate.format(DateTimeFormatter.ofPattern("yyyy-MM-ddT1HH:mm:ss"))));
+                            eventDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         }
         return true;
     }

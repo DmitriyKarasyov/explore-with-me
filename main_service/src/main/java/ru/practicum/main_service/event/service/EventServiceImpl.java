@@ -442,7 +442,9 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.getEventDate() != null && !updateEventUserRequest.getEventDate().isBlank()) {
             event.setEventDate(LocalDateTime.parse(updateEventUserRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-        if (updateEventUserRequest.getLocation() != null) {
+        if (updateEventUserRequest.getLocation() != null
+                && updateEventUserRequest.getLocation() != event.getLocation()) {
+            locationRepository.save(updateEventUserRequest.getLocation());
             event.setLocation(updateEventUserRequest.getLocation());
         }
         if (updateEventUserRequest.getPaid() != null) {
