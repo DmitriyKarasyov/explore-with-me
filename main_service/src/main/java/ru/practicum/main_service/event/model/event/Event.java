@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Cascade;
 import ru.practicum.main_service.category.model.Category;
 import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.model.state.State;
@@ -41,10 +40,9 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumns({ @JoinColumn(name = "lat", referencedColumnName = "lat"),
             @JoinColumn(name = "lon", referencedColumnName = "lon") })
-    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
     private Location location;
     @Column(name = "paid", nullable = false)
     private Boolean paid;

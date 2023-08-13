@@ -10,6 +10,7 @@ import ru.practicum.main_service.event.model.state.State;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
 import ru.practicum.main_service.exception.EWMConstraintViolationException;
+import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
 import ru.practicum.main_service.participation.mapper.ParticipationRequestMapper;
 import ru.practicum.main_service.participation.model.ParticipationRequest;
@@ -76,6 +77,23 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         return ParticipationRequestMapper.makeParticipationRequestDto(
                 requestDBRequest.tryRequest(requestRepository::save, request));
+    }
+
+    @Override
+    public ParticipationRequestDto cancelRequest(Integer userId, Integer requestId) {
+        userDBRequest.checkExistence(User.class, userId);
+        requestDBRequest.checkExistence(ParticipationRequest.class, requestId);
+        ParticipationRequest request = requestRepository.getReferenceById(requestId);
+        checkRequester(userId, request);
+        request.setStatus(Status.CANCELED);
+        return ParticipationRequestMapper.makeParticipationRequestDto(
+                requestDBRequest.tryRequest(requestRepository::save, request));
+    }
+
+    public void checkRequester(Integer userId, ParticipationRequest request) {
+        if (!Objects.equals(request.getRequester().getId(), userId)) {
+            throw new NotFoundException("user with id=" + userId + " did not make request");
+        }
     }
 
     public void checkIfRequestIsDouble(Integer eventId, Integer requesterId) {
