@@ -35,6 +35,7 @@ public class EventPrivateController {
     public EventFullDto postEvent(@PathVariable Integer userId,
                                   @RequestBody @Valid NewEventDto newEventDto) {
         log.info("post new event: {}", newEventDto);
+        service.saveLocation(newEventDto.getLocation());
         return service.postEvent(userId, newEventDto);
     }
 
@@ -48,10 +49,11 @@ public class EventPrivateController {
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventUser(@PathVariable Integer userId,
                                        @PathVariable Integer eventId,
-                                       @RequestBody @Valid UpdateEventUserRequest updateEventUserRequest) {
+                                       @RequestBody @Valid UpdateEventUserRequest updateRequest) {
         log.info("patch event with id={}, initiated by user with id={}, update event: {}", eventId, userId,
-                updateEventUserRequest);
-        return service.patchEventUser(userId, eventId, updateEventUserRequest);
+                updateRequest);
+        service.saveLocation(updateRequest.getLocation());
+        return service.patchEventUser(userId, eventId, updateRequest);
     }
 
     @GetMapping("/{eventId}/requests")

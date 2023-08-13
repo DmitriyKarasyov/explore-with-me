@@ -38,6 +38,7 @@ public class EventAdminController {
     public EventFullDto patchEventAdmin(@PathVariable Integer eventId,
                                         @RequestBody @Valid UpdateEventAdminRequest updateRequest) {
         log.info("admin update event with id={}, update request: {}", eventId, updateRequest);
+        service.saveLocation(updateRequest.getLocation());
         return service.patchEventAdmin(eventId, updateRequest);
     }
 }

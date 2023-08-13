@@ -20,4 +20,8 @@ public class Location {
     @Id
     @Column(name = "lon", nullable = false)
     private Float lon;
+
+    public LocationId getLocationId() {
+        return new LocationId(lat, lon);
+    }
 }
