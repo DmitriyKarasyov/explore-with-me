@@ -1,5 +1,6 @@
 package ru.practicum.stats_client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -13,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-
+@Slf4j
 public class StatsClient {
     private final RestTemplate rest;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -28,6 +29,8 @@ public class StatsClient {
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
                                            @Nullable Boolean unique) {
+        log.info("Stat client receive request to get stats, start={}, end={}, uris={}, unique={}", start, end, uris,
+                unique);
         String startString = start.format(formatter);
         String endString = end.format(formatter);
         if (uris != null && !uris.isEmpty() && unique != null) {
