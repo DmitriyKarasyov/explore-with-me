@@ -15,7 +15,6 @@ import ru.practicum.main_service.common.DBRequest;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.common.PageableParser;
 import ru.practicum.main_service.event.dto.*;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.mapper.*;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.sort.Sort;
@@ -27,7 +26,6 @@ import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.model.event.QEvent;
 import ru.practicum.main_service.event.repository.LocationRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
-import ru.practicum.main_service.exception.EWMConstraintViolationException;
 import ru.practicum.main_service.exception.IncorrectRequestException;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
@@ -294,20 +292,20 @@ public class EventServiceImpl implements EventService {
         return eventFullDto;
     }
 
-    @Override
-    @Transactional
-    public void saveLocation(Location location) {
-        if (location == null) {
-            return;
-        }
-        if (!locationRepository.existsById(location.getLocationId())) {
-            try {
-                locationRepository.save(location);
-            } catch (Exception e) {
-                throw new EWMConstraintViolationException(e.getMessage());
-            }
-        }
-    }
+//    @Override
+//    @Transactional
+//    public void saveLocation(Location location) {
+//        if (location == null) {
+//            return;
+//        }
+//        if (!locationRepository.existsById(location.getLocationId())) {
+//            try {
+//                locationRepository.save(location);
+//            } catch (Exception e) {
+//                throw new EWMConstraintViolationException(e.getMessage());
+//            }
+//        }
+//    }
 
     public void checkDates(String startString, String endString) {
         if (LocalDateTime.parse(startString, EWMDateFormatter.FORMATTER).isAfter(
@@ -432,7 +430,7 @@ public class EventServiceImpl implements EventService {
     public void checkStateUser(Event event) {
         State state = event.getState();
         if (state.equals(State.PUBLISHED)) {
-            throw new IncorrectRequestException("Only pending or canceled events can be changed");
+            throw new ConditionViolationException("Only pending or canceled events can be changed");
         }
     }
 

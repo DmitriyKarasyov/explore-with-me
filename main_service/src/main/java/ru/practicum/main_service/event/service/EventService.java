@@ -1,7 +1,6 @@
 package ru.practicum.main_service.event.service;
 
 import ru.practicum.main_service.event.dto.*;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,5 +32,5 @@ public interface EventService {
 
     EventFullDto getEventByIdPublic(Integer id, HttpServletRequest request);
 
-    void saveLocation(Location location);
+//    void saveLocation(Location location);
 }
