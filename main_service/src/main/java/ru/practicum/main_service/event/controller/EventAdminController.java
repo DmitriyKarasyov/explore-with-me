@@ -7,6 +7,7 @@ import ru.practicum.main_service.event.dto.EventFullDto;
 import ru.practicum.main_service.event.dto.UpdateEventAdminRequest;
 import ru.practicum.main_service.event.service.EventService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -35,7 +36,7 @@ public class EventAdminController {
 
     @PatchMapping("/{eventId}")
     public EventFullDto patchEventAdmin(@PathVariable Integer eventId,
-                                        @RequestBody UpdateEventAdminRequest updateRequest) {
+                                        @RequestBody @Valid UpdateEventAdminRequest updateRequest) {
         log.info("admin update event with id={}, update request: {}", eventId, updateRequest);
         return service.patchEventAdmin(eventId, updateRequest);
     }

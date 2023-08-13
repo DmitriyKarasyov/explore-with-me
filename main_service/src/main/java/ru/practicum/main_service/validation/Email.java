@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Constraint(validatedBy = {EmailValidator.class})
+@Constraint(validatedBy = {EwmEmailValidator.class})
 @Retention(RUNTIME)
 @Target(FIELD)
 public @interface Email {

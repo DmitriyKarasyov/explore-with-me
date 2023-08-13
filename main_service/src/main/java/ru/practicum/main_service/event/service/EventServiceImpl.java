@@ -200,9 +200,6 @@ public class EventServiceImpl implements EventService {
     public EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest) {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
-        if (updateRequest.getEventDate() != null) {
-            validateDate(updateRequest.getEventDate());
-        }
         if (updateRequest.getStateAction() != null && !updateRequest.getStateAction().isBlank()) {
             AdminStateAction stateAction = StateActionMapper.makeAdminStateAction(updateRequest.getStateAction());
             checkStateAdmin(event, stateAction);
@@ -532,12 +529,5 @@ public class EventServiceImpl implements EventService {
                 .views(0)
                 .confirmedRequests(0)
                 .build();
-    }
-
-    public void validateDate(String dateString) {
-        LocalDateTime eventDate = LocalDateTime.parse(dateString, EWMDateFormatter.FORMATTER);
-        if (eventDate.isBefore(LocalDateTime.now().plusHours(2L))) {
-            throw new IncorrectRequestException("Can not set event date les then 2 hours after current time.");
-        }
     }
 }
