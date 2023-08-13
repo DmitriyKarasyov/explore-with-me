@@ -312,6 +312,7 @@ public class EventServiceImpl implements EventService {
     public EventRequestStatusUpdateResult confirmRequests(List<ParticipationRequest> requests, Event event) {
         if (checkModeration(event)) {
             changeStatusToConfirmed(event, requests);
+            event.setConfirmedRequests(event.getConfirmedRequests() + requests.size());
             return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requests), new ArrayList<>());
         }
         Integer freePlaces = checkEventLimit(event, requests);
@@ -461,7 +462,7 @@ public class EventServiceImpl implements EventService {
                 event.setState(State.PENDING);
                 break;
             case CANCEL_REVIEW:
-                event.setState(null);
+                event.setState(State.CANCELED);
                 break;
         }
     }
