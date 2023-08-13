@@ -196,8 +196,8 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest) {
         eventDBRequest.checkExistence(Event.class, eventId);
-        EventDateValidator.validate(updateRequest.getEventDate());
         Event event = eventRepository.getReferenceById(eventId);
+        validateDate(event, updateRequest);
         if (updateRequest.getStateAction() != null && !updateRequest.getStateAction().isBlank()) {
             AdminStateAction stateAction = StateActionMapper.makeAdminStateAction(updateRequest.getStateAction());
             checkStateAdmin(event, stateAction);
@@ -514,11 +514,18 @@ public class EventServiceImpl implements EventService {
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
+                .publishedOn(LocalDateTime.now())
                 .state(State.PENDING)
                 .title(newEventDto.getTitle())
                 .initiator(userRepository.getReferenceById(userId))
                 .views(0)
                 .confirmedRequests(0)
                 .build();
+    }
+
+    public void validateDate(Event event, UpdateEventRequest updateEventRequest) {
+        if (LocalDateTime.parse(updateEventRequest.getEventDate()).isBefore(event.getPublishedOn().plusHours(1L))) {
+            throw new IncorrectRequestException("Event date cannot be earlier than 1 hour after publication date.");
+        }
     }
 }
