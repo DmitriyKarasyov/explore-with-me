@@ -12,7 +12,8 @@ public class CompilationMapper {
     public static CompilationDto makeCompilationDto(Compilation compilation) {
         return CompilationDto.builder()
                 .id(compilation.getId())
-                .events(EventMapper.makeEventShortDto(new ArrayList<>(compilation.getEvents())))
+                .events(compilation.getEvents() == null ? null
+                        : EventMapper.makeEventShortDto(new ArrayList<>(compilation.getEvents())))
                 .pinned(compilation.getPinned())
                 .title(compilation.getTitle())
                 .build();

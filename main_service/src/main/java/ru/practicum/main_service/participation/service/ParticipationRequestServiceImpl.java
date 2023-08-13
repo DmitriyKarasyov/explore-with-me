@@ -8,6 +8,7 @@ import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.state.State;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
+import ru.practicum.main_service.exception.EWMConstraintViolationException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
 import ru.practicum.main_service.participation.mapper.ParticipationRequestMapper;
 import ru.practicum.main_service.participation.model.ParticipationRequest;
@@ -54,6 +55,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         checkIfRequesterIsInitiator(userId, event);
+        checkIfRequestIsDouble(eventId, userId);
         checkEventState(event);
         checkEventLimit(event);
         ParticipationRequest request = ParticipationRequest.builder()
@@ -72,6 +74,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 requestDBRequest.tryRequest(requestRepository::save, request));
     }
 
+    public void checkIfRequestIsDouble(Integer eventId, Integer requesterId) {
+        if (requestRepository.existsByEvent_IdAndRequester_Id(eventId, requesterId)) {
+            throw new EWMConstraintViolationException("Can not post participation request: request from this user " +
+                    "already exists");
+        }
+    }
+
     public void checkIfRequesterIsInitiator(Integer userId, Event event) {
         if (Objects.equals(event.getInitiator().getId(), userId)) {
             throw new ConditionViolationException("Initiator of event cannot request participation.");
@@ -85,7 +94,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     public void checkEventLimit(Event event) {
-        if (event.getParticipantLimit() != 0 && !(event.getConfirmedRequests() < event.getParticipantLimit())) {
+        if (event.getParticipantLimit() != 0 && !(event.getConfirmedRequests() <= event.getParticipantLimit())) {
             throw new ConditionViolationException("Event participation limit is reached");
         }
     }

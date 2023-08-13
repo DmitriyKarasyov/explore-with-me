@@ -98,7 +98,7 @@ public class CompilationServiceImpl implements CompilationService {
         return Compilation.builder()
                 .events(newCompilationDto.getEvents() == null ? null
                         : new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
-                .pinned(newCompilationDto.getPinned())
+                .pinned(newCompilationDto.getPinned() != null && newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .build();
     }

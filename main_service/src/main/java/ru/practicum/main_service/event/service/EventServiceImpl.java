@@ -15,7 +15,6 @@ import ru.practicum.main_service.common.DBRequest;
 import ru.practicum.main_service.common.EWMDateFormatter;
 import ru.practicum.main_service.common.PageableParser;
 import ru.practicum.main_service.event.dto.*;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.event.mapper.*;
 import ru.practicum.main_service.event.model.event.Event;
 import ru.practicum.main_service.event.model.sort.Sort;
@@ -27,7 +26,6 @@ import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.model.event.QEvent;
 import ru.practicum.main_service.event.repository.LocationRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
-import ru.practicum.main_service.exception.EWMConstraintViolationException;
 import ru.practicum.main_service.exception.IncorrectRequestException;
 import ru.practicum.main_service.exception.NotFoundException;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
@@ -121,7 +119,8 @@ public class EventServiceImpl implements EventService {
         }
         if (updateEventUserRequest.getLocation() != null
                 && updateEventUserRequest.getLocation() != event.getLocation()) {
-            saveLocation(updateEventUserRequest.getLocation());
+//            saveLocation(updateEventUserRequest.getLocation());
+            event.setLocation(updateEventUserRequest.getLocation());
         }
         updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
@@ -209,7 +208,8 @@ public class EventServiceImpl implements EventService {
         }
         if (updateRequest.getLocation() != null
                 && !updateRequest.getLocation().equals(event.getLocation())) {
-            saveLocation(updateRequest.getLocation());
+//            saveLocation(updateRequest.getLocation());
+            event.setLocation(updateRequest.getLocation());
         }
         event = updateEvent(event, updateRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
@@ -414,7 +414,7 @@ public class EventServiceImpl implements EventService {
 
     public void checkStateUser(Event event) {
         State state = event.getState();
-        if (!(state == null || state == State.PENDING || state == State.CANCELED)) {
+        if (state.equals(State.PUBLISHED)) {
             throw new IncorrectRequestException("Only pending or canceled events can be changed");
         }
     }
@@ -533,12 +533,12 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
-    @Transactional
-    public void saveLocation(Location location) {
-        try {
-            locationRepository.save(location);
-        } catch (Exception e) {
-            throw new EWMConstraintViolationException(e.getMessage());
-        }
-    }
+//    @Transactional
+//    public void saveLocation(Location location) {
+//        try {
+//            locationRepository.save(location);
+//        } catch (Exception e) {
+//            throw new EWMConstraintViolationException(e.getMessage());
+//        }
+//    }
 }
