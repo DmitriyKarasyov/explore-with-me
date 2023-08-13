@@ -32,8 +32,6 @@ public class StatController {
                                             @RequestParam(required = false) String end,
                                             @RequestParam(required = false) List<String> uris,
                                             @RequestParam(required = false) Boolean unique) {
-        log.info("get stats: {}", statService.getStatistics(URLDecoder.decode(start, StandardCharsets.UTF_8),
-                URLDecoder.decode(end, StandardCharsets.UTF_8), uris, unique));
         return statService.getStatistics(start, end, uris, unique);
     }
 }

@@ -67,8 +67,9 @@ public class StatService {
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         }
-        log.info("returning: {}", StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple)));
-        return StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
+        List<ViewStatsDto> viewStatsDtoList = StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
+        log.info("returning: view stats list={}", viewStatsDtoList);
+        return viewStatsDtoList;
     }
 
     public List<ViewStats> makeViewStats(List<Tuple> viewStatsTuple) {
