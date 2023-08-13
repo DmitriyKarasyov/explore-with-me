@@ -59,7 +59,7 @@ public class StatService {
             whereClause.and(endpointHit.timestamp.before(endDate));
         }
         if (uris != null && !uris.isEmpty()) {
-            whereClause.and(endpointHit.uri.contains(uris.iterator().next()));
+            whereClause.and(endpointHit.uri.contains(uris.iterator().next())).or(endpointHit.uri.in(uris));
         }
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
