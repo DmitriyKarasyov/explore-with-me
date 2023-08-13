@@ -35,7 +35,6 @@ import ru.practicum.main_service.participation.repository.RequestRepository;
 import ru.practicum.main_service.participation.status.Status;
 import ru.practicum.main_service.user.model.User;
 import ru.practicum.main_service.user.repository.UserRepository;
-import ru.practicum.main_service.validation.EventDateValidator;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
 
