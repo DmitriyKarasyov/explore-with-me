@@ -42,6 +42,8 @@ public class StatService {
 
     @Transactional
     public List<ViewStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
+        log.info("stat service receive request to get stats, start={}, end={}, uris={}, unique={}", start, end,
+                uris, unique);
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
 
