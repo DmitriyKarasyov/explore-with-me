@@ -1,5 +1,7 @@
 package ru.practicum.statistics_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
@@ -28,11 +30,13 @@ import java.util.List;
 public class StatService {
     private final StatRepository statRepository;
     private final EntityManager entityManager;
+    private final ObjectMapper mapper;
 
     @Autowired
     public StatService(StatRepository statRepository, JpaContext jpaContext) {
         this.statRepository = statRepository;
         this.entityManager = jpaContext.getEntityManagerByManagedType(EndpointHit.class);
+        mapper = new ObjectMapper();
     }
 
     @Transactional
@@ -41,7 +45,7 @@ public class StatService {
     }
 
     @Transactional
-    public List<ViewStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
+    public String getStatistics(String start, String end, List<String> uris, Boolean unique) {
         log.info("stat service receive request to get stats, start={}, end={}, uris={}, unique={}", start, end,
                 uris, unique);
         BooleanBuilder whereClause = new BooleanBuilder();
@@ -68,8 +72,12 @@ public class StatService {
                     .orderBy(aliasQuantity.desc()).fetch();
         }
         List<ViewStatsDto> viewStatsDtoList = StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
-        log.info("returning: view stats list={}", viewStatsDtoList);
-        return viewStatsDtoList;
+        try {
+            log.info("returning: view stats list={}", mapper.writeValueAsString(viewStatsDtoList));
+            return mapper.writeValueAsString(viewStatsDtoList);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public List<ViewStats> makeViewStats(List<Tuple> viewStatsTuple) {
