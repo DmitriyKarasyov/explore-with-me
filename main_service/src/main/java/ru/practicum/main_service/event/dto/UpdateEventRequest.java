@@ -13,7 +13,7 @@ public class UpdateEventRequest {
     private String description;
     @ValidEventDate
     private String eventDate;
-//    private Location location;
+    private Location location;
     private Boolean paid;
     private Integer participantLimit;
     private Boolean requestModeration;

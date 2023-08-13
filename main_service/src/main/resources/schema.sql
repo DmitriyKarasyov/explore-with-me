@@ -16,12 +16,6 @@ CREATE TABLE IF NOT EXISTS categories (
     CONSTRAINT uq_name UNIQUE (category_name)
 );
 
-CREATE TABLE IF NOT EXISTS locations (
-    lat FLOAT NOT NULL,
-    lon FLOAT NOT NULL,
-    CONSTRAINT pk_locations PRIMARY KEY (lat, lon)
-);
-
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
     annotation VARCHAR(2000) NOT NULL,
@@ -40,8 +34,7 @@ CREATE TABLE IF NOT EXISTS events (
     state VARCHAR,
     title VARCHAR(120) NOT NULL,
     views INTEGER,
-    CONSTRAINT pk_events PRIMARY KEY (id),
-    FOREIGN KEY (lat, lon) REFERENCES locations (lat, lon)
+    CONSTRAINT pk_events PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS participation_requests (

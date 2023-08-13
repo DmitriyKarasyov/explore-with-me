@@ -24,7 +24,6 @@ import ru.practicum.main_service.event.model.state_action.UserStateAction;
 import ru.practicum.main_service.event.model.status.UpdateRequestStatus;
 import ru.practicum.main_service.event.repository.EventRepository;
 import ru.practicum.main_service.event.model.event.QEvent;
-import ru.practicum.main_service.event.repository.LocationRepository;
 import ru.practicum.main_service.exception.ConditionViolationException;
 import ru.practicum.main_service.exception.IncorrectRequestException;
 import ru.practicum.main_service.exception.NotFoundException;
@@ -50,7 +49,6 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
-    private final LocationRepository locationRepository;
     private final DBRequest<Event> eventDBRequest;
     private final DBRequest<User> userDBRequest;
     private final DBRequest<Category> categoryDBRequest;
@@ -63,13 +61,11 @@ public class EventServiceImpl implements EventService {
                             UserRepository userRepository,
                             CategoryRepository categoryRepository,
                             RequestRepository requestRepository,
-                            LocationRepository locationRepository,
                             EWMStatsClient statsClient) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.requestRepository = requestRepository;
-        this.locationRepository = locationRepository;
         eventDBRequest = new DBRequest<>(eventRepository);
         userDBRequest = new DBRequest<>(userRepository);
         categoryDBRequest = new DBRequest<>(categoryRepository);
@@ -90,7 +86,6 @@ public class EventServiceImpl implements EventService {
     public EventFullDto postEvent(Integer userId, NewEventDto newEventDto) {
         userDBRequest.checkExistence(User.class, userId);
         categoryDBRequest.checkExistence(Category.class, newEventDto.getCategory());
-        locationRepository.save(newEventDto.getLocation());
         setDefaultFields(newEventDto);
         Event newEvent = eventDBRequest.tryRequest(eventRepository::save, makeEvent(newEventDto, userId));
         return EventMapper.makeEventFullDto(newEvent);
@@ -117,11 +112,6 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.getStateAction() != null) {
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
-//        if (updateEventUserRequest.getLocation() != null
-//                && updateEventUserRequest.getLocation() != event.getLocation()) {
-////            saveLocation(updateEventUserRequest.getLocation());
-//            event.setLocation(updateEventUserRequest.getLocation());
-//        }
         updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
@@ -206,11 +196,6 @@ public class EventServiceImpl implements EventService {
             checkStateAdmin(event, stateAction);
             setStateAdmin(event, stateAction);
         }
-//        if (updateRequest.getLocation() != null
-//                && !updateRequest.getLocation().equals(event.getLocation())) {
-////            saveLocation(updateRequest.getLocation());
-//            event.setLocation(updateRequest.getLocation());
-//        }
         event = updateEvent(event, updateRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
@@ -291,21 +276,6 @@ public class EventServiceImpl implements EventService {
         log.info("returning event full dto: {}", eventFullDto);
         return eventFullDto;
     }
-
-//    @Override
-//    @Transactional
-//    public void saveLocation(Location location) {
-//        if (location == null) {
-//            return;
-//        }
-//        if (!locationRepository.existsById(location.getLocationId())) {
-//            try {
-//                locationRepository.save(location);
-//            } catch (Exception e) {
-//                throw new EWMConstraintViolationException(e.getMessage());
-//            }
-//        }
-//    }
 
     public void checkDates(String startString, String endString) {
         if (LocalDateTime.parse(startString, EWMDateFormatter.FORMATTER).isAfter(
@@ -465,10 +435,10 @@ public class EventServiceImpl implements EventService {
         if (updateEventRequest.getEventDate() != null && !updateEventRequest.getEventDate().isBlank()) {
             event.setEventDate(LocalDateTime.parse(updateEventRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-//        if (updateEventRequest.getLocation() != null
-//                && updateEventRequest.getLocation() != event.getLocation()) {
-//            event.setLocation(updateEventRequest.getLocation());
-//        }
+        if (updateEventRequest.getLocation() != null) {
+            event.setLat(updateEventRequest.getLocation().getLat());
+            event.setLon(updateEventRequest.getLocation().getLon());
+        }
         if (updateEventRequest.getPaid() != null) {
             event.setPaid(updateEventRequest.getPaid());
         }
@@ -536,7 +506,8 @@ public class EventServiceImpl implements EventService {
                 .createdOn(LocalDateTime.now())
                 .description(newEventDto.getDescription())
                 .eventDate(LocalDateTime.parse(newEventDto.getEventDate(), EWMDateFormatter.FORMATTER))
-                .location(newEventDto.getLocation())
+                .lat(newEventDto.getLocation().getLat())
+                .lon(newEventDto.getLocation().getLon())
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
@@ -547,13 +518,4 @@ public class EventServiceImpl implements EventService {
                 .confirmedRequests(0)
                 .build();
     }
-
-//    @Transactional
-//    public void saveLocation(Location location) {
-//        try {
-//            locationRepository.save(location);
-//        } catch (Exception e) {
-//            throw new EWMConstraintViolationException(e.getMessage());
-//        }
-//    }
 }
