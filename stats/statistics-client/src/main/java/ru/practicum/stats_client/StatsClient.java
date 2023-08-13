@@ -32,10 +32,11 @@ public class StatsClient {
                                        @Nullable Boolean unique) {
         String startString = start == null ? null : start.format(formatter);
         String endString = end == null ? null : end.format(formatter);
-        if (uris != null && !uris.isEmpty() && unique != null) {
-            return getStatsInUrisAndUnique(startString, endString, uris, unique);
-        } else if (uris != null && !uris.isEmpty()) {
-            return getStatsInUris(startString, endString, uris);
+        String urisPath = StringUtils.join(uris, ",");
+        if (urisPath != null && !urisPath.isEmpty() && unique != null) {
+            return getStatsInUrisAndUnique(startString, endString, urisPath, unique);
+        } else if (urisPath != null && !urisPath.isEmpty()) {
+            return getStatsInUris(startString, endString, urisPath);
         } else if (unique != null) {
             return getStatsUnique(startString, endString, unique);
         } else {
@@ -43,7 +44,7 @@ public class StatsClient {
         }
     }
 
-    private ResponseEntity<ViewStatsDto[]> getStatsInUrisAndUnique(String start, String end, List<String> uris,
+    private ResponseEntity<ViewStatsDto[]> getStatsInUrisAndUnique(String start, String end, String uris,
                                                        Boolean unique) {
         HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris,
@@ -58,7 +59,7 @@ public class StatsClient {
         return getStatsRequest(makePath(parameters));
     }
 
-    private ResponseEntity<ViewStatsDto[]> getStatsInUris(String start, String end, List<String> uris) {
+    private ResponseEntity<ViewStatsDto[]> getStatsInUris(String start, String end, String uris) {
         HashMap<String, Object> parameters = new HashMap<>(Map.of(
                 "uris", uris
         ));
