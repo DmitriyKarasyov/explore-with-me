@@ -70,10 +70,12 @@ public class StatService {
             throw new IllegalArgumentException("startDate > endDate");
         }
 
+        BooleanBuilder uriClause = new BooleanBuilder();
         if (uris != null && !uris.isEmpty()) {
             for (String uri : uris) {
-                whereClause.and(endpointHit.uri.like(uri + "%"));
+                uriClause.or(endpointHit.uri.like(uri + "%"));
             }
+            whereClause.and(uriClause);
         }
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
