@@ -196,7 +196,9 @@ public class EventServiceImpl implements EventService {
     public EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest) {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
-        validateDate(event, updateRequest);
+        if (updateRequest.getEventDate() != null) {
+            validateDate(updateRequest.getEventDate());
+        }
         if (updateRequest.getStateAction() != null && !updateRequest.getStateAction().isBlank()) {
             AdminStateAction stateAction = StateActionMapper.makeAdminStateAction(updateRequest.getStateAction());
             checkStateAdmin(event, stateAction);
@@ -476,7 +478,11 @@ public class EventServiceImpl implements EventService {
     public void setStateAdmin(Event event, AdminStateAction stateAction) {
         switch (stateAction) {
             case PUBLISH_EVENT:
+                if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1L))) {
+                    throw new IncorrectRequestException("Cannot publish event in les then hour before event starts.");
+                }
                 event.setState(State.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
                 break;
             case REJECT_EVENT:
                 event.setState(State.CANCELED);
@@ -521,9 +527,10 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
-    public void validateDate(Event event, UpdateEventRequest updateEventRequest) {
-        if (LocalDateTime.parse(updateEventRequest.getEventDate()).isBefore(LocalDateTime.now().plusHours(1L))) {
-            throw new IncorrectRequestException("Event date cannot be earlier than 1 hour after publication date.");
+    public void validateDate(String dateString) {
+        LocalDateTime eventDate = LocalDateTime.parse(dateString, EWMDateFormatter.FORMATTER);
+        if (eventDate.isBefore(LocalDateTime.now().plusHours(2L))) {
+            throw new IncorrectRequestException("Can not set event date les then 2 hours after current time.");
         }
     }
 }
