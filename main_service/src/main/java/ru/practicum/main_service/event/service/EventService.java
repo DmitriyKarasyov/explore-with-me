@@ -1,5 +1,6 @@
 package ru.practicum.main_service.event.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import ru.practicum.main_service.event.dto.*;
 import ru.practicum.main_service.participation.dto.ParticipationRequestDto;
 

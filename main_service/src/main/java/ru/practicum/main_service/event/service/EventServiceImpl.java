@@ -1,5 +1,6 @@
 package ru.practicum.main_service.event.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import ru.practicum.main_service.user.repository.UserRepository;
 import ru.practicum.main_service.validation.EventDateValidator;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
+import ru.practicum.statistics_service.dto.ViewStatsDtoList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -259,9 +261,17 @@ public class EventServiceImpl implements EventService {
         }
         statsClient.postHit(makeEndpointHitDto(request));
         ResponseEntity<Object> responseEntity = statsClient.getStats(
-                null, null, List.of("/events/" + id), true);
-            List<ViewStatsDto> viewStats = (List<ViewStatsDto>) responseEntity.getBody();
-        event.setViews(viewStats.get(0).getHits());
+                LocalDateTime.now().minusMonths(6), LocalDateTime.now().plusMonths(6),
+                List.of("/events/" + id), true);
+        if (responseEntity.getBody() != null) {
+            try {
+                List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
+                        mapper.getTypeFactory().constructCollectionType(List.class, ViewStatsDto.class));
+                event.setViews(viewStats.get(0).getHits());
+            } catch (JsonProcessingException e) {
+                throw new IncorrectRequestException(e.getMessage());
+            }
+        }
         return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
     }
 

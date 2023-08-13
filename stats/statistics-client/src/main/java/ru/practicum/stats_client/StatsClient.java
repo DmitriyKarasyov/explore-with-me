@@ -1,6 +1,5 @@
 package ru.practicum.stats_client;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -9,7 +8,6 @@ import ru.practicum.statistics_service.dto.EndpointHitDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,14 +19,14 @@ public class StatsClient {
         this.rest = rest;
     }
 
-    public void postHit(EndpointHitDto endpointHitDto) {
-        makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
+    public ResponseEntity<Object> postHit(EndpointHitDto endpointHitDto) {
+        return makeAndSendRequest(HttpMethod.POST, "/hit", null, endpointHitDto);
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
-                                 @Nullable Boolean unique) {
-        String startString = start == null ? null : start.format(formatter);
-        String endString = end == null ? null : end.format(formatter);
+                                           @Nullable Boolean unique) {
+        String startString = start.format(formatter);
+        String endString = end.format(formatter);
         if (uris != null && !uris.isEmpty() && unique != null) {
             return getStatsInUrisAndUnique(startString, endString, uris, unique);
         } else if (uris != null && !uris.isEmpty()) {
@@ -42,54 +40,33 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
                                                            Boolean unique) {
-        HashMap<String, Object> parameters = new HashMap<>(Map.of(
+        Map<String, Object> parameters = Map.of(
+                "start", start,
+                "end", end,
                 "uris", uris,
                 "unique", unique
-        ));
-        if (start != null) {
-            parameters.put("start", start);
-        }
-        if (end != null) {
-            parameters.put("end", end);
-        }
-        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
+        );
+        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}&unique={unique}",
                 parameters, null);
     }
 
-    public String makePath(Map<String, Object> parameters) {
-        StringBuilder pathBuilder = new StringBuilder("stats/?");
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            pathBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
-        }
-        String path = pathBuilder.toString();
-        return StringUtils.chop(path);
-    }
-
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
-        HashMap<String, Object> parameters = new HashMap<>(Map.of(
+        Map<String, Object> parameters = Map.of(
+                "start", start,
+                "end", end,
                 "uris", uris
-        ));
-        if (start != null) {
-            parameters.put("start", start);
-        }
-        if (end != null) {
-            parameters.put("end", end);
-        }
-        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
+        );
+        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
                 parameters, null);
     }
 
     private ResponseEntity<Object> getStatsUnique(String start, String end, Boolean unique) {
-        HashMap<String, Object> parameters = new HashMap<>(Map.of(
+        Map<String, Object> parameters = Map.of(
+                "start", start,
+                "end", end,
                 "unique", unique
-        ));
-        if (start != null) {
-            parameters.put("start", start);
-        }
-        if (end != null) {
-            parameters.put("end", end);
-        }
-        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
+        );
+        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
                 parameters, null);
     }
 
@@ -98,24 +75,24 @@ public class StatsClient {
                 "start", start,
                 "end", end
         );
-        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
+        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}",
                 parameters, null);
     }
 
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders());
 
-        ResponseEntity<Object> ewmServerResponse;
+        ResponseEntity<Object> shareitServerResponse;
         try {
             if (parameters != null) {
-                ewmServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
+                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
-                ewmServerResponse = rest.exchange(path, method, requestEntity, Object.class);
+                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
-        return prepareGatewayResponse(ewmServerResponse);
+        return prepareGatewayResponse(shareitServerResponse);
     }
 
     private HttpHeaders defaultHeaders() {
