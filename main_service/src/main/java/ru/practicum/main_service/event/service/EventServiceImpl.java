@@ -273,10 +273,13 @@ public class EventServiceImpl implements EventService {
                     event.setViews(viewStats.get(0).getHits());
                 }
             } catch (JsonProcessingException e) {
-                throw new IncorrectRequestException(e.getMessage());
+                throw new IncorrectRequestException("Залупа");
             }
         }
-        return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
+        EventFullDto eventFullDto =
+                EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
+        log.info("returning event full dto: {}", eventFullDto);
+        return eventFullDto;
     }
 
     public void checkDates(String startString, String endString) {
