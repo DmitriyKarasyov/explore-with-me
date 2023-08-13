@@ -13,7 +13,7 @@ public class CompilationMapper {
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .events(EventMapper.makeEventShortDto(new ArrayList<>(compilation.getEvents())))
-                .pinned(compilation.getPined())
+                .pinned(compilation.getPinned())
                 .title(compilation.getTitle())
                 .build();
     }

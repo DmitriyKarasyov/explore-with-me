@@ -36,9 +36,9 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional
-    public List<CompilationDto> getCompilations(Boolean pined, Integer from, Integer size) {
+    public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
         Pageable pageable = PageableParser.makePageable(from, size);
-        List<Compilation> compilations = compilationRepository.findByPined(pined, pageable);
+        List<Compilation> compilations = compilationRepository.findBypinned(pinned, pageable);
         return CompilationMapper.makeCompilationDto(compilations);
     }
 
@@ -74,8 +74,8 @@ public class CompilationServiceImpl implements CompilationService {
             Set<Event> newEvents = new HashSet<>(eventRepository.findAllByIdIn(updateCompilationRequest.getEvents()));
             compilation.setEvents(newEvents);
         }
-        if (updateCompilationRequest.getPined() != null) {
-            compilation.setPined(updateCompilationRequest.getPined());
+        if (updateCompilationRequest.getPinned() != null) {
+            compilation.setPinned(updateCompilationRequest.getPinned());
         }
         if (updateCompilationRequest.getTitle() != null && !updateCompilationRequest.getTitle().isBlank()) {
             compilation.setTitle(updateCompilationRequest.getTitle());
@@ -90,7 +90,7 @@ public class CompilationServiceImpl implements CompilationService {
         }
         return Compilation.builder()
                 .events(new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
-                .pined(newCompilationDto.getPined())
+                .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .build();
     }

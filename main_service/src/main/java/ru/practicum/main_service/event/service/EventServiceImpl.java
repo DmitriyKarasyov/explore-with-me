@@ -117,6 +117,10 @@ public class EventServiceImpl implements EventService {
             checkStateUser(event);
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
+        if (updateEventUserRequest.getLocation() != null
+                && updateEventUserRequest.getLocation() != event.getLocation()) {
+            locationRepository.save(updateEventUserRequest.getLocation());
+        }
         updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
@@ -203,6 +207,10 @@ public class EventServiceImpl implements EventService {
             AdminStateAction stateAction = StateActionMapper.makeAdminStateAction(updateRequest.getStateAction());
             checkStateAdmin(event, stateAction);
             setStateAdmin(event, stateAction);
+        }
+        if (updateRequest.getLocation() != null
+                && updateRequest.getLocation() != event.getLocation()) {
+            locationRepository.save(updateRequest.getLocation());
         }
         event = updateEvent(event, updateRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
@@ -429,36 +437,35 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public Event updateEvent(Event event, UpdateEventRequest updateEventUserRequest) {
-        if (updateEventUserRequest.getAnnotation() != null) {
-            event.setAnnotation(updateEventUserRequest.getAnnotation());
+    public Event updateEvent(Event event, UpdateEventRequest updateEventRequest) {
+        if (updateEventRequest.getAnnotation() != null) {
+            event.setAnnotation(updateEventRequest.getAnnotation());
         }
-        if (updateEventUserRequest.getCategory() != null) {
-            categoryDBRequest.checkExistence(Category.class, updateEventUserRequest.getCategory());
-            event.setCategory(categoryRepository.getReferenceById(updateEventUserRequest.getCategory()));
+        if (updateEventRequest.getCategory() != null) {
+            categoryDBRequest.checkExistence(Category.class, updateEventRequest.getCategory());
+            event.setCategory(categoryRepository.getReferenceById(updateEventRequest.getCategory()));
         }
-        if (updateEventUserRequest.getDescription() != null && !updateEventUserRequest.getDescription().isBlank()) {
-            event.setDescription(updateEventUserRequest.getDescription());
+        if (updateEventRequest.getDescription() != null && !updateEventRequest.getDescription().isBlank()) {
+            event.setDescription(updateEventRequest.getDescription());
         }
-        if (updateEventUserRequest.getEventDate() != null && !updateEventUserRequest.getEventDate().isBlank()) {
-            event.setEventDate(LocalDateTime.parse(updateEventUserRequest.getEventDate(), EWMDateFormatter.FORMATTER));
+        if (updateEventRequest.getEventDate() != null && !updateEventRequest.getEventDate().isBlank()) {
+            event.setEventDate(LocalDateTime.parse(updateEventRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-        if (updateEventUserRequest.getLocation() != null
-                && updateEventUserRequest.getLocation() != event.getLocation()) {
-            locationRepository.save(updateEventUserRequest.getLocation());
-            event.setLocation(updateEventUserRequest.getLocation());
+        if (updateEventRequest.getLocation() != null
+                && updateEventRequest.getLocation() != event.getLocation()) {
+            event.setLocation(updateEventRequest.getLocation());
         }
-        if (updateEventUserRequest.getPaid() != null) {
-            event.setPaid(updateEventUserRequest.getPaid());
+        if (updateEventRequest.getPaid() != null) {
+            event.setPaid(updateEventRequest.getPaid());
         }
-        if (updateEventUserRequest.getParticipantLimit() != null) {
-            event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
+        if (updateEventRequest.getParticipantLimit() != null) {
+            event.setParticipantLimit(updateEventRequest.getParticipantLimit());
         }
-        if (updateEventUserRequest.getRequestModeration() != null) {
-            event.setRequestModeration(updateEventUserRequest.getRequestModeration());
+        if (updateEventRequest.getRequestModeration() != null) {
+            event.setRequestModeration(updateEventRequest.getRequestModeration());
         }
-        if (updateEventUserRequest.getTitle() != null && !updateEventUserRequest.getTitle().isBlank()) {
-            event.setTitle(updateEventUserRequest.getTitle());
+        if (updateEventRequest.getTitle() != null && !updateEventRequest.getTitle().isBlank()) {
+            event.setTitle(updateEventRequest.getTitle());
         }
         return event;
     }

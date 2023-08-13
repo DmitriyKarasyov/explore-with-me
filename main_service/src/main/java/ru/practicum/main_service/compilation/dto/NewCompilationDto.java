@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class NewCompilationDto {
     private Set<Integer> events;
-    private Boolean pined;
+    private Boolean pinned;
     @NotBlank(fieldName = "title")
     @Length(fieldName = "title", min = 1, max = 50)
     private String title;

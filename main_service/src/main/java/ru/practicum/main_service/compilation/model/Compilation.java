@@ -23,8 +23,8 @@ public class Compilation {
     private Integer id;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<Event> events;
-    @Column(name = "pined")
-    private Boolean pined;
+    @Column(name = "pinned")
+    private Boolean pinned;
     @Column(name = "title")
     private String title;
 }

@@ -14,11 +14,11 @@ public class CompilationPublicController {
     private CompilationService service;
 
     @GetMapping
-    public List<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pined,
+    public List<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
                                                 @RequestParam(required = false, defaultValue = "0") Integer from,
                                                 @RequestParam(required = false, defaultValue = "10") Integer size) {
-        log.info("get list of compilations, pined={}, from={}, size={}", pined, from, size);
-        return service.getCompilations(pined, from, size);
+        log.info("get list of compilations, pinned={}, from={}, size={}", pinned, from, size);
+        return service.getCompilations(pinned, from, size);
     }
 
     @GetMapping("/{compId}")

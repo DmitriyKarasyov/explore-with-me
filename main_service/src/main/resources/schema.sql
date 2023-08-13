@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS participation_requests (
 
 CREATE TABLE IF NOT EXISTS compilations (
     id INTEGER GENERATED ALWAYS AS IDENTITY,
-    pined BOOLEAN NOT NULL,
+    pinned BOOLEAN NOT NULL,
     title VARCHAR(50),
     CONSTRAINT compilations_pk PRIMARY KEY (id),
     CONSTRAINT uq_compilation_title UNIQUE (title)
