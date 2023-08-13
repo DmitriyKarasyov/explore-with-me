@@ -50,12 +50,21 @@ public class StatService {
                 uris, unique);
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
-        LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
-        LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
-        whereClause.and(endpointHit.timestamp.after(startDate)).and(endpointHit.timestamp.before(endDate));
+
+        if (start != null) {
+            LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.after(startDate));
+        }
+
+        if (end != null) {
+            LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.before(endDate));
+        }
 
         if (uris != null && !uris.isEmpty()) {
-            whereClause.and(endpointHit.uri.in(uris));
+            for (String uri : uris) {
+                whereClause.and(endpointHit.uri.like(uri + "%"));
+            }
         }
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
