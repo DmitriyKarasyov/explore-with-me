@@ -266,7 +266,9 @@ public class EventServiceImpl implements EventService {
             try {
                 List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
                         mapper.getTypeFactory().constructCollectionType(List.class, ViewStatsDto.class));
-                event.setViews(viewStats.get(0).getHits());
+                if (!viewStats.isEmpty()) {
+                    event.setViews(viewStats.get(0).getHits());
+                }
             } catch (JsonProcessingException e) {
                 throw new IncorrectRequestException(e.getMessage());
             }
