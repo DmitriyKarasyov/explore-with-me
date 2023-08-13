@@ -6,9 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
 import ru.practicum.statistics_service.service.StatService;
-
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
