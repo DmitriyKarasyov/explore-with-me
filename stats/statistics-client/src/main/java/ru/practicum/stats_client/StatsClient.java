@@ -6,6 +6,8 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -42,8 +44,8 @@ public class StatsClient {
     private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
                                                            Boolean unique) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
+                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
                 "uris", uris,
                 "unique", unique
         );
@@ -53,8 +55,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
+                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
                 "uris", uris
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
@@ -63,8 +65,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsUnique(String start, String end, Boolean unique) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
+                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
                 "unique", unique
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
@@ -73,8 +75,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsAllUrisNotUnique(String start, String end) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end
+                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
+                "end", URLEncoder.encode(end, StandardCharsets.UTF_8)
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}",
                 parameters, null);

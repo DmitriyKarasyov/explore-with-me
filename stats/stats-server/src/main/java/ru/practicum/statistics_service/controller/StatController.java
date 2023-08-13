@@ -7,6 +7,8 @@ import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
 import ru.practicum.statistics_service.service.StatService;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -30,7 +32,8 @@ public class StatController {
                                             @RequestParam(required = false) String end,
                                             @RequestParam(required = false) List<String> uris,
                                             @RequestParam(required = false) Boolean unique) {
-        log.info("return: {}", statService.getStatistics(start, end, uris, unique));
+        log.info("return: {}", statService.getStatistics(URLDecoder.decode(start, StandardCharsets.UTF_8),
+                URLDecoder.decode(end, StandardCharsets.UTF_8), uris, unique));
         return statService.getStatistics(start, end, uris, unique);
     }
 }
