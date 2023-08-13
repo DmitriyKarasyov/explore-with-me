@@ -310,7 +310,7 @@ public class EventServiceImpl implements EventService {
     }
 
     public EventRequestStatusUpdateResult confirmRequests(List<ParticipationRequest> requests, Event event) {
-        if (checkModeration(event)) {
+        if (!checkIfLimitExists(event)) {
             changeStatusToConfirmed(event, requests);
             event.setConfirmedRequests(event.getConfirmedRequests() + requests.size());
             return makeEventRequestStatusUpdateResult(changeStatusToConfirmed(event, requests), new ArrayList<>());
@@ -383,8 +383,8 @@ public class EventServiceImpl implements EventService {
         return event.getParticipantLimit() - event.getConfirmedRequests();
     }
 
-    public Boolean checkModeration(Event event) {
-        return event.getParticipantLimit() == 0 || !event.getRequestModeration();
+    public Boolean checkIfLimitExists(Event event) {
+        return event.getParticipantLimit() != 0;
     }
 
     public void checkRequestsRightEvent(Event event, List<ParticipationRequest> requests) {
