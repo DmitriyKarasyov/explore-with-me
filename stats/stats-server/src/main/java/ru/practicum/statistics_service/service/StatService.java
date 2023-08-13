@@ -51,14 +51,23 @@ public class StatService {
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
 
+        LocalDateTime startDate = null, endDate = null;
         if (start != null) {
-            LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
+            startDate = LocalDateTime.parse(start, StatMapper.formatter);
             whereClause.and(endpointHit.timestamp.goe(startDate));
+        } else {
+            throw new IllegalArgumentException("startDate == null");
         }
 
         if (end != null) {
-            LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
+            endDate = LocalDateTime.parse(end, StatMapper.formatter);
             whereClause.and(endpointHit.timestamp.loe(endDate));
+        } else {
+            throw new IllegalArgumentException("endDate == null");
+        }
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("startDate > endDate");
         }
 
         if (uris != null && !uris.isEmpty()) {

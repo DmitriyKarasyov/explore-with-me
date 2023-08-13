@@ -205,7 +205,9 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public List<EventShortDto> getEventsPublic(String text, Integer[] categories, Boolean paid,
                                                String rangeStart, String rangeEnd, Boolean onlyAvailable,
-                                               String sortString, Integer from, Integer size) {
+                                               String sortString, Integer from, Integer size,
+                                               HttpServletRequest request) {
+        statsClient.postHit(makeEndpointHitDto(request));
         BooleanBuilder whereClause = new BooleanBuilder();
         QEvent event = QEvent.event;
         whereClause.and(event.state.eq(State.PUBLISHED));

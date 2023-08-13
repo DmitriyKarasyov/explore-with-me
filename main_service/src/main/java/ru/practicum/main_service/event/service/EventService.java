@@ -28,7 +28,8 @@ public interface EventService {
     EventFullDto patchEventAdmin(Integer eventId, UpdateEventAdminRequest updateRequest);
 
     List<EventShortDto> getEventsPublic(String text, Integer[] categories, Boolean paid, String rangeStart,
-                                        String rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size);
+                                        String rangeEnd, Boolean onlyAvailable, String sort, Integer from,
+                                        Integer size, HttpServletRequest request);
 
     EventFullDto getEventByIdPublic(Integer id, HttpServletRequest request);
 
