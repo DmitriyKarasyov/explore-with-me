@@ -50,11 +50,11 @@ public class StatService {
                 uris, unique);
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
-        if (start != null && !start.isBlank()) {
+        if (start != null) {
             LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
             whereClause.and(endpointHit.timestamp.after(startDate));
         }
-        if (end != null && !end.isBlank()) {
+        if (end != null) {
             LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
             whereClause.and(endpointHit.timestamp.before(endDate));
         }
