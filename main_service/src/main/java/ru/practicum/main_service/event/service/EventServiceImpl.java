@@ -261,22 +261,23 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
         statsClient.postHit(makeEndpointHitDto(request));
-        ResponseEntity<Object> responseEntity = statsClient.getStats(
+        ResponseEntity<ViewStatsDto[]> responseEntity = statsClient.getStats(
                 LocalDateTime.now().minusMonths(6), LocalDateTime.now().plusMonths(6),
                 List.of("/events/" + id), true);
-        log.info("got statistics: {}", responseEntity.getBody().toString());
-        if (responseEntity.getBody() != null) {
-            try {
-                List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
-                        mapper.getTypeFactory().constructCollectionType(List.class, ViewStatsDto.class));
+        try {
+            log.info("got statistics: {}", mapper.writeValueAsString(responseEntity.getBody()));
+            if (responseEntity.getBody() != null) {
+
+                List<ViewStatsDto> viewStats = List.of(responseEntity.getBody());
                 if (!viewStats.isEmpty()) {
                     event.setViews(viewStats.get(0).getHits());
                 }
-            } catch (JsonProcessingException e) {
-                log.error("error", e);
-                throw new IncorrectRequestException(e.getMessage());
             }
+        } catch (JsonProcessingException e) {
+            log.error("error", e);
+            throw new IncorrectRequestException(e.getMessage());
         }
+
         EventFullDto eventFullDto =
                 EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
         log.info("returning event full dto: {}", eventFullDto);
