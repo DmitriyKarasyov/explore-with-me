@@ -40,7 +40,7 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumns({ @JoinColumn(name = "lat", referencedColumnName = "lat"),
             @JoinColumn(name = "lon", referencedColumnName = "lon") })
     private Location location;
