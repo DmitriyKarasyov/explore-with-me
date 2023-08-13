@@ -46,9 +46,10 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsInUrisAndUnique(String start, String end, List<String> uris,
                                                            Boolean unique) {
+        log.info("in the next method, start={}, end={}, uris={}, unique={}", start, end, uris, unique);
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
-                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
+                "start", start,
+                "end", end,
                 "uris", uris,
                 "unique", unique
         );
@@ -58,8 +59,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
-                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
+                "start", start,
+                "end", end,
                 "uris", uris
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
@@ -68,8 +69,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsUnique(String start, String end, Boolean unique) {
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
-                "end", URLEncoder.encode(end, StandardCharsets.UTF_8),
+                "start", start,
+                "end", end,
                 "unique", unique
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
@@ -78,8 +79,8 @@ public class StatsClient {
 
     private ResponseEntity<Object> getStatsAllUrisNotUnique(String start, String end) {
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start, StandardCharsets.UTF_8),
-                "end", URLEncoder.encode(end, StandardCharsets.UTF_8)
+                "start", start,
+                "end", end
         );
         return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}",
                 parameters, null);
