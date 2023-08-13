@@ -37,7 +37,6 @@ import ru.practicum.main_service.user.repository.UserRepository;
 import ru.practicum.main_service.validation.EventDateValidator;
 import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
-import ru.practicum.statistics_service.dto.ViewStatsDtoList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
