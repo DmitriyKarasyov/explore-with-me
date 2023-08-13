@@ -69,19 +69,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .requester(userRepository.getReferenceById(userId))
                 .build();
 
-        if (event.getRequestModeration()) {
+        if (event.getRequestModeration() && event.getParticipantLimit() == 0) {
             request.setStatus(Status.PENDING);
-        } else if (event.getParticipantLimit() == 0) {
+        } else {
             request.setStatus(Status.CONFIRMED);
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-        } else {
-            int freePlaces = event.getParticipantLimit() - event.getConfirmedRequests();
-            if (freePlaces >= 1) {
-                request.setStatus(Status.CONFIRMED);
-                event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            } else {
-                request.setStatus(Status.REJECTED);
-            }
         }
         eventDBRequest.tryRequest(eventRepository::save, event);
         return ParticipationRequestMapper.makeParticipationRequestDto(
