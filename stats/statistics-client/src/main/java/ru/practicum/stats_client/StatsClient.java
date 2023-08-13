@@ -1,5 +1,6 @@
 package ru.practicum.stats_client;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -51,8 +52,17 @@ public class StatsClient {
         if (end != null) {
             parameters.put("end", end);
         }
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}&unique={unique}",
+        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
                 parameters, null);
+    }
+
+    public String makePath(Map<String, Object> parameters) {
+        StringBuilder pathBuilder = new StringBuilder("stats/?");
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            pathBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        String path = pathBuilder.toString();
+        return StringUtils.chop(path);
     }
 
     private ResponseEntity<Object> getStatsInUris(String start, String end, List<String> uris) {
@@ -65,7 +75,7 @@ public class StatsClient {
         if (end != null) {
             parameters.put("end", end);
         }
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&uris={uris}",
+        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
                 parameters, null);
     }
 
@@ -79,7 +89,7 @@ public class StatsClient {
         if (end != null) {
             parameters.put("end", end);
         }
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}&unique={unique}",
+        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
                 parameters, null);
     }
 
@@ -88,7 +98,7 @@ public class StatsClient {
                 "start", start,
                 "end", end
         );
-        return makeAndSendRequest(HttpMethod.GET, "stats/?start={start}&end={end}",
+        return makeAndSendRequest(HttpMethod.GET, makePath(parameters),
                 parameters, null);
     }
 

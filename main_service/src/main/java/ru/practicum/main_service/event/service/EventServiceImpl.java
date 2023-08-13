@@ -260,9 +260,7 @@ public class EventServiceImpl implements EventService {
         statsClient.postHit(makeEndpointHitDto(request));
         ResponseEntity<Object> responseEntity = statsClient.getStats(
                 null, null, List.of("/events/" + id), true);
-        Object[] objects = (Object[]) responseEntity.getBody();
-        List<ViewStatsDto> viewStats = Arrays.stream(objects)
-                .map(object -> mapper.convertValue(object, ViewStatsDto.class)).collect(Collectors.toList());
+            List<ViewStatsDto> viewStats = (List<ViewStatsDto>) responseEntity.getBody();
         event.setViews(viewStats.get(0).getHits());
         return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
     }

@@ -5,6 +5,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class StatService {
     private final StatRepository statRepository;
@@ -68,7 +70,7 @@ public class StatService {
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         }
-
+        log.info("returning: {}", StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple)));
         return StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
     }
 

@@ -26,8 +26,8 @@ public class StatController {
     }
 
     @GetMapping("/stats")
-    public List<ViewStatsDto> getStats(@RequestParam String start,
-                                            @RequestParam String end,
+    public List<ViewStatsDto> getStats(@RequestParam(required = false) String start,
+                                            @RequestParam(required = false) String end,
                                             @RequestParam(required = false) List<String> uris,
                                             @RequestParam(required = false) Boolean unique) {
         log.info("get statistics from start: {}, end: {}, uris: {}, unique: {}", start, end, uris, unique);
