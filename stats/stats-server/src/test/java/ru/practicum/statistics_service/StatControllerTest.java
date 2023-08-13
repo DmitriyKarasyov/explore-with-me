@@ -63,7 +63,7 @@ public class StatControllerTest {
     @Test
     public void getStatsTest() throws Exception {
         when(statService.getStatistics("2022-09-05 11:00:23", "2022-09-07 11:00:23", null,
-                null)).thenReturn(List.of(viewStatsDto));
+                null)).thenReturn(List.of(viewStatsDto).toString());
 
         mvc.perform(get("/stats?start=2022-09-05 11:00:23&end=2022-09-07 11:00:23")
                         .contentType(MediaType.APPLICATION_JSON)
