@@ -69,7 +69,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                 .requester(userRepository.getReferenceById(userId))
                 .build();
 
-        if (event.getRequestModeration() && event.getParticipantLimit() == 0) {
+        if (event.getRequestModeration() && event.getParticipantLimit() != 0) {
             request.setStatus(Status.PENDING);
         } else {
             request.setStatus(Status.CONFIRMED);
