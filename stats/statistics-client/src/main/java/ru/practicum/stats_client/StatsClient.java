@@ -1,5 +1,6 @@
 package ru.practicum.stats_client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class StatsClient {
     private final RestTemplate rest;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -91,6 +93,7 @@ public class StatsClient {
     }
 
     private ResponseEntity<ViewStatsDto[]> getStatsRequest(String path) {
+        log.info("get for entity, path={}", path);
         return rest.getForEntity(path, ViewStatsDto[].class);
     }
 
