@@ -3,6 +3,7 @@ package ru.practicum.main_service.event.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
@@ -262,6 +264,7 @@ public class EventServiceImpl implements EventService {
         ResponseEntity<Object> responseEntity = statsClient.getStats(
                 LocalDateTime.now().minusMonths(6), LocalDateTime.now().plusMonths(6),
                 List.of("/events/" + id), true);
+        log.info("got statistics: {}", responseEntity.getBody());
         if (responseEntity.getBody() != null) {
             try {
                 List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
