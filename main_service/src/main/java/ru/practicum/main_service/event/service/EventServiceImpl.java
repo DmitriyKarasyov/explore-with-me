@@ -264,7 +264,7 @@ public class EventServiceImpl implements EventService {
         ResponseEntity<Object> responseEntity = statsClient.getStats(
                 LocalDateTime.now().minusMonths(6), LocalDateTime.now().plusMonths(6),
                 List.of("/events/" + id), true);
-        log.info("got statistics: {}", responseEntity.getBody());
+        log.info("got statistics: {}", responseEntity.getBody().toString());
         if (responseEntity.getBody() != null) {
             try {
                 List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
