@@ -1,5 +1,6 @@
 package ru.practicum.main_service.event.service;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
@@ -40,6 +41,7 @@ import ru.practicum.statistics_service.dto.EndpointHitDto;
 import ru.practicum.statistics_service.dto.ViewStatsDto;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -267,13 +269,15 @@ public class EventServiceImpl implements EventService {
         log.info("got statistics: {}", responseEntity.getBody().toString());
         if (responseEntity.getBody() != null) {
             try {
-                List<ViewStatsDto> viewStats = mapper.readValue(responseEntity.getBody().toString(),
+                List<ViewStatsDto> viewStats = mapper.readValue((JsonParser) responseEntity.getBody(),
                         mapper.getTypeFactory().constructCollectionType(List.class, ViewStatsDto.class));
                 if (!viewStats.isEmpty()) {
                     event.setViews(viewStats.get(0).getHits());
                 }
             } catch (JsonProcessingException e) {
                 throw new IncorrectRequestException(e.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return EventMapper.makeEventFullDto(eventDBRequest.tryRequest(eventRepository::save, event));
