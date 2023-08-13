@@ -74,7 +74,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         } else {
             request.setStatus(Status.CONFIRMED);
         }
-
+        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        eventDBRequest.tryRequest(eventRepository::save, event);
         return ParticipationRequestMapper.makeParticipationRequestDto(
                 requestDBRequest.tryRequest(requestRepository::save, request));
     }
