@@ -513,7 +513,6 @@ public class EventServiceImpl implements EventService {
                 .paid(newEventDto.getPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
                 .requestModeration(newEventDto.getRequestModeration())
-                .publishedOn(LocalDateTime.now())
                 .state(State.PENDING)
                 .title(newEventDto.getTitle())
                 .initiator(userRepository.getReferenceById(userId))
@@ -523,7 +522,7 @@ public class EventServiceImpl implements EventService {
     }
 
     public void validateDate(Event event, UpdateEventRequest updateEventRequest) {
-        if (LocalDateTime.parse(updateEventRequest.getEventDate()).isBefore(event.getPublishedOn().plusHours(1L))) {
+        if (LocalDateTime.parse(updateEventRequest.getEventDate()).isBefore(LocalDateTime.now().plusHours(1L))) {
             throw new IncorrectRequestException("Event date cannot be earlier than 1 hour after publication date.");
         }
     }
