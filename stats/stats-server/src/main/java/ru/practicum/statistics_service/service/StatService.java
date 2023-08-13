@@ -53,12 +53,12 @@ public class StatService {
 
         if (start != null) {
             LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
-            whereClause.and(endpointHit.timestamp.after(startDate));
+            whereClause.and(endpointHit.timestamp.goe(startDate));
         }
 
         if (end != null) {
             LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
-            whereClause.and(endpointHit.timestamp.before(endDate));
+            whereClause.and(endpointHit.timestamp.loe(endDate));
         }
 
         if (uris != null && !uris.isEmpty()) {
