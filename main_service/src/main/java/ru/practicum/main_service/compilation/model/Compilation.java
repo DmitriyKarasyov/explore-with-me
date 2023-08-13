@@ -22,6 +22,8 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "compilations_events", schema = "public",
+            joinColumns = {@JoinColumn(name = "id")}, inverseJoinColumns = {@JoinColumn(name = "event_id")})
     private Set<Event> events;
     @Column(name = "pinned")
     private Boolean pinned;

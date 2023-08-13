@@ -1,5 +1,6 @@
 package ru.practicum.main_service.exception.handler;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -46,6 +47,13 @@ public class ExceptionController {
                 .status(HttpStatus.BAD_REQUEST.toString())
                 .timestamp(LocalDateTime.now().format(EWMDateFormatter.FORMATTER))
                 .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError dataIntegrityViolationHandler(DataIntegrityViolationException e) {
+        EWMException exception = new EWMException(e.getMessage(), "Data integrity violation.");
+        return makeApiError(HttpStatus.CONFLICT, exception);
     }
 
     public ApiError makeApiError(HttpStatus httpStatus, EWMException e) {

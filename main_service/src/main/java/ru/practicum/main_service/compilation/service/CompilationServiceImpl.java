@@ -90,11 +90,14 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     public Compilation makeCompilation(NewCompilationDto newCompilationDto) {
-        if (!eventRepository.existsAllByIdIn(newCompilationDto.getEvents())) {
-            throw new NotFoundException("Event was not found.");
+        if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
+            if (!eventRepository.existsAllByIdIn(newCompilationDto.getEvents())) {
+                throw new NotFoundException("Event was not found.");
+            }
         }
         return Compilation.builder()
-                .events(new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
+                .events(newCompilationDto.getEvents() == null ? null
+                        : new HashSet<>(eventRepository.findAllByIdIn(newCompilationDto.getEvents())))
                 .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .build();

@@ -208,7 +208,7 @@ public class EventServiceImpl implements EventService {
             setStateAdmin(event, stateAction);
         }
         if (updateRequest.getLocation() != null
-                && updateRequest.getLocation() != event.getLocation()) {
+                && !updateRequest.getLocation().equals(event.getLocation())) {
             saveLocation(updateRequest.getLocation());
         }
         event = updateEvent(event, updateRequest);
