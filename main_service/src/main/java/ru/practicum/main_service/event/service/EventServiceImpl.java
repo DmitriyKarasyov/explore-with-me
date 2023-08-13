@@ -273,7 +273,8 @@ public class EventServiceImpl implements EventService {
                     event.setViews(viewStats.get(0).getHits());
                 }
             } catch (JsonProcessingException e) {
-                throw new IncorrectRequestException("Залупа");
+                log.error("error", e);
+                throw new IncorrectRequestException(e.getMessage());
             }
         }
         EventFullDto eventFullDto =
