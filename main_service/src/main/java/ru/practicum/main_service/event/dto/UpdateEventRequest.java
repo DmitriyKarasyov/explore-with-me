@@ -1,7 +1,6 @@
 package ru.practicum.main_service.event.dto;
 
 import lombok.Data;
-import ru.practicum.main_service.event.location.model.Location;
 import ru.practicum.main_service.validation.Length;
 import ru.practicum.main_service.validation.ValidEventDate;
 
@@ -14,7 +13,7 @@ public class UpdateEventRequest {
     private String description;
     @ValidEventDate
     private String eventDate;
-    private Location location;
+//    private Location location;
     private Boolean paid;
     private Integer participantLimit;
     private Boolean requestModeration;

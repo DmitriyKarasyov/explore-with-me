@@ -117,11 +117,11 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.getStateAction() != null) {
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
-        if (updateEventUserRequest.getLocation() != null
-                && updateEventUserRequest.getLocation() != event.getLocation()) {
-//            saveLocation(updateEventUserRequest.getLocation());
-            event.setLocation(updateEventUserRequest.getLocation());
-        }
+//        if (updateEventUserRequest.getLocation() != null
+//                && updateEventUserRequest.getLocation() != event.getLocation()) {
+////            saveLocation(updateEventUserRequest.getLocation());
+//            event.setLocation(updateEventUserRequest.getLocation());
+//        }
         updateEvent(event, updateEventUserRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
@@ -206,11 +206,11 @@ public class EventServiceImpl implements EventService {
             checkStateAdmin(event, stateAction);
             setStateAdmin(event, stateAction);
         }
-        if (updateRequest.getLocation() != null
-                && !updateRequest.getLocation().equals(event.getLocation())) {
-//            saveLocation(updateRequest.getLocation());
-            event.setLocation(updateRequest.getLocation());
-        }
+//        if (updateRequest.getLocation() != null
+//                && !updateRequest.getLocation().equals(event.getLocation())) {
+////            saveLocation(updateRequest.getLocation());
+//            event.setLocation(updateRequest.getLocation());
+//        }
         event = updateEvent(event, updateRequest);
         Event updatedEvent = eventDBRequest.tryRequest(eventRepository::save, event);
         return EventMapper.makeEventFullDto(updatedEvent);
@@ -465,10 +465,10 @@ public class EventServiceImpl implements EventService {
         if (updateEventRequest.getEventDate() != null && !updateEventRequest.getEventDate().isBlank()) {
             event.setEventDate(LocalDateTime.parse(updateEventRequest.getEventDate(), EWMDateFormatter.FORMATTER));
         }
-        if (updateEventRequest.getLocation() != null
-                && updateEventRequest.getLocation() != event.getLocation()) {
-            event.setLocation(updateEventRequest.getLocation());
-        }
+//        if (updateEventRequest.getLocation() != null
+//                && updateEventRequest.getLocation() != event.getLocation()) {
+//            event.setLocation(updateEventRequest.getLocation());
+//        }
         if (updateEventRequest.getPaid() != null) {
             event.setPaid(updateEventRequest.getPaid());
         }
