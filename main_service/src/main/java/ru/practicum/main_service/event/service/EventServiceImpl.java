@@ -113,8 +113,8 @@ public class EventServiceImpl implements EventService {
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         checkInitiator(event, userId);
+        checkStateUser(event);
         if (updateEventUserRequest.getStateAction() != null) {
-            checkStateUser(event);
             setStateUser(event, updateEventUserRequest.getStateAction());
         }
         if (updateEventUserRequest.getLocation() != null

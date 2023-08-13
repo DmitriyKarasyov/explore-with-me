@@ -44,7 +44,7 @@ public class Event {
     @ManyToOne
     @JoinColumns({ @JoinColumn(name = "lat", referencedColumnName = "lat"),
             @JoinColumn(name = "lon", referencedColumnName = "lon") })
-    @Cascade(org.hibernate.annotations.CascadeType.MERGE)
+    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
     private Location location;
     @Column(name = "paid", nullable = false)
     private Boolean paid;

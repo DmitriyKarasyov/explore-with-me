@@ -1,5 +1,6 @@
 package ru.practicum.main_service.participation.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
     private final RequestRepository requestRepository;
@@ -54,6 +56,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         userDBRequest.checkExistence(User.class, userId);
         eventDBRequest.checkExistence(Event.class, eventId);
         Event event = eventRepository.getReferenceById(eventId);
+        log.info("participation limit={}, confirmed requests={}", event.getParticipantLimit(),
+                event.getConfirmedRequests());
         checkIfRequesterIsInitiator(userId, event);
         checkIfRequestIsDouble(eventId, userId);
         checkEventState(event);
