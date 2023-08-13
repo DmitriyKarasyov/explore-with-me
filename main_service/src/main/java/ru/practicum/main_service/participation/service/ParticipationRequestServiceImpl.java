@@ -116,7 +116,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     public void checkEventLimit(Event event) {
-        if (event.getParticipantLimit() != 0 && !(event.getConfirmedRequests() <= event.getParticipantLimit())) {
+        if (event.getParticipantLimit() != 0 && (Objects.equals(event.getConfirmedRequests(),
+                event.getParticipantLimit()))) {
             throw new ConditionViolationException("Event participation limit is reached");
         }
     }
