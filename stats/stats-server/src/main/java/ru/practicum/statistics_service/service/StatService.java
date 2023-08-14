@@ -1,10 +1,13 @@
 package ru.practicum.statistics_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.stereotype.Service;
@@ -22,15 +25,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class StatService {
     private final StatRepository statRepository;
     private final EntityManager entityManager;
+    private final ObjectMapper mapper;
 
     @Autowired
     public StatService(StatRepository statRepository, JpaContext jpaContext) {
         this.statRepository = statRepository;
         this.entityManager = jpaContext.getEntityManagerByManagedType(EndpointHit.class);
+        mapper = new ObjectMapper();
     }
 
     @Transactional
@@ -39,32 +45,59 @@ public class StatService {
     }
 
     @Transactional
-    public List<ViewStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startDate = LocalDateTime.parse(start, StatMapper.formatter);
-        LocalDateTime endDate = LocalDateTime.parse(end, StatMapper.formatter);
+    public String getStatistics(String start, String end, List<String> uris, Boolean unique) {
+        log.info("stat service receive request to get stats, start={}, end={}, uris={}, unique={}", start, end,
+                uris, unique);
         BooleanBuilder whereClause = new BooleanBuilder();
         QEndpointHit endpointHit = QEndpointHit.endpointHit;
-        whereClause.and(endpointHit.timestamp.after(startDate)).and(endpointHit.timestamp.before(endDate));
 
+        LocalDateTime startDate = null, endDate = null;
+        if (start != null) {
+            startDate = LocalDateTime.parse(start, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.goe(startDate));
+        } else {
+            throw new IllegalArgumentException("startDate == null");
+        }
+
+        if (end != null) {
+            endDate = LocalDateTime.parse(end, StatMapper.formatter);
+            whereClause.and(endpointHit.timestamp.loe(endDate));
+        } else {
+            throw new IllegalArgumentException("endDate == null");
+        }
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("startDate > endDate");
+        }
+
+        BooleanBuilder uriClause = new BooleanBuilder();
         if (uris != null && !uris.isEmpty()) {
-            whereClause.and(endpointHit.uri.in(uris));
+            for (String uri : uris) {
+                uriClause.or(endpointHit.uri.like(uri + "%"));
+            }
+            whereClause.and(uriClause);
         }
 
         JPAQuery<Tuple> query = new JPAQuery<>(entityManager);
         List<Tuple> viewStatsTuple;
-        NumberPath<Long> aliasQuantity = Expressions.numberPath(Long.class, "quantity");
+        NumberPath<Integer> aliasQuantity = Expressions.numberPath(Integer.class, "quantity");
 
-        if (unique != null) {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().as(aliasQuantity))
+        if (unique != null && unique) {
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.countDistinct().intValue().as(aliasQuantity))
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         } else {
-            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count().as(aliasQuantity))
+            viewStatsTuple = query.select(endpointHit.app, endpointHit.uri, endpointHit.ip.count().intValue().as(aliasQuantity))
                     .from(endpointHit).where(whereClause).groupBy(endpointHit.app, endpointHit.uri)
                     .orderBy(aliasQuantity.desc()).fetch();
         }
-
-        return StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
+        List<ViewStatsDto> viewStatsDtoList = StatMapper.makeViewStatsDto(makeViewStats(viewStatsTuple));
+        try {
+            log.info("returning: view stats list={}", mapper.writeValueAsString(viewStatsDtoList));
+            return mapper.writeValueAsString(viewStatsDtoList);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public List<ViewStats> makeViewStats(List<Tuple> viewStatsTuple) {
@@ -73,7 +106,7 @@ public class StatService {
             viewStatsList.add(ViewStats.builder()
                     .app(tuple.get(0, String.class))
                     .uri(tuple.get(1, String.class))
-                    .hits(tuple.get(2, Long.class))
+                    .hits(tuple.get(2, Integer.class))
                     .build());
         }
         return viewStatsList;
