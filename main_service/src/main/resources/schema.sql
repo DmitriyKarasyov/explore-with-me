@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS users, categories, locations, events, participation_requests, compilations,
-compilations_events;
+compilations_events, comments;
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -57,4 +57,20 @@ CREATE TABLE IF NOT EXISTS compilations (
 CREATE TABLE IF NOT EXISTS compilations_events (
     id INTEGER NOT NULL,
     event_id INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    comment_text TEXT NOT NULL,
+    event_id INTEGER NULL,
+    posted_at timestamp NOT NULL,
+    author_id INTEGER NOT NULL,
+    state CHARACTER VARYING(64) NOT NULL,
+    moderated_by_id INTEGER NULL,
+    reply_to_id INTEGER NULL,
+    CONSTRAINT comments_pk PRIMARY KEY(id),
+    CONSTRAINT comments_event_fk FOREIGN KEY(event_id) references events(id),
+    CONSTRAINT comments_author_fk FOREIGN KEY (author_id) references users(id),
+    CONSTRAINT comments_moderated_fk FOREIGN KEY(moderated_by_id) references users(id),
+    CONSTRAINT comments_reply_fk FOREIGN KEY (reply_to_id) references comments(id)
 );
